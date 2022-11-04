@@ -4,9 +4,9 @@ import algebra.big_operators.basic
 
 def arithprog(a b c:ℕ):Prop:=∃ k:ℕ, (b=a+k) ∧ (c=b+k)
 
-def vdW_prop (N : ℕ) (r : ℕ) : Prop := ∀ f : fin N → fin r, ∃ (a b c : fin N), (arithprog a b c) ∧ (f a = f b) ∧ (f b = f c)
+def vdW_prop (N : ℕ) (r : ℕ) : Prop := ∀ f : ℕ → fin r, ∃ (a b c : fin N), (arithprog a b c) ∧ (f a = f b) ∧ (f b = f c)
 
-lemma vdW_monotone : ∀ n r, vdW_prop n r → ∀ m, m ≥ n → vdW_prop m r := sorry
+lemma vdW_monotone : ∀ n r, vdW_prop n r → ∀ m, n ≤ m → vdW_prop m r := sorry
 
 def fin_preim {α : Type} [decidable_eq α] {n : ℕ} (f : fin n → α) (i : α) : finset (fin n) := finset.filter (λ j, f j = i) (fin.fintype n).elems
 
