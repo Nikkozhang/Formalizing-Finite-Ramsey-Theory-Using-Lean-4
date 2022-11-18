@@ -1,8 +1,8 @@
 import data.finset.card
-
 import data.fintype.basic
 import algebra.big_operators.basic
 import data.fin.basic
+import combinatorics.pigeonhole
 
 def arithprog(a b c:ℕ):Prop:=∃ k:ℕ, (b=a+k) ∧ (c=b+k)
 
@@ -28,12 +28,14 @@ use [⟨x, lt_of_lt_of_le x.2 ᾰ_1⟩, ⟨y, lt_of_lt_of_le y.2 ᾰ_1⟩, ⟨z,
 apply xyz_h,
 end
 
-def fin_preim {α : Type} [decidable_eq α] {n : ℕ} (f : fin n → α) (i : α) : finset (fin n) := finset.filter (λ j, f j = i) (fin.fintype n).elems
+lemma pick_one {α : Type} {s : finset α} [decidable_eq α] : 0 < s.card → ∃ (a : α) (t : finset α), (t.card = s.card.pred) ∧ (a ∉ t) ∧ (insert a t = s) := sorry
 
-lemma pigeonhole_principle : ∀ m n : ℕ, ∀ f : (fin m) → (fin n), ∃ i : fin n, (fin_preim f i).card >= m / n :=
+example : ∀ f : fin 5 → fin 2, ∃ a b c, (a ≠ b) ∧ (b ≠ c) ∧ (a ≠ c) ∧ (f a = f b) ∧ (f b = f c) :=
 begin
 intros,
-by_contra,
-simp at h,
-have h' : ((fin.fintype n).elems.bUnion (fin_preim f)).card = m,
+have inq : fintype.card (fin 2) • 2 < ↑(fintype.card (fin 5)),
+simp,
+linarith,
+have fh' := fintype.exists_lt_card_fiber_of_mul_lt_card f inq,
+sorry
 end
