@@ -28,7 +28,29 @@ use [⟨x, lt_of_lt_of_le x.2 ᾰ_1⟩, ⟨y, lt_of_lt_of_le y.2 ᾰ_1⟩, ⟨z,
 apply xyz_h,
 end
 
-lemma pick_one {α : Type} {s : finset α} [decidable_eq α] : 0 < s.card → ∃ (a : α) (t : finset α), (t.card = s.card.pred) ∧ (a ∉ t) ∧ (insert a t = s) := sorry
+lemma pick_one {α : Type} {s : finset α} [decidable_eq α] : 0 < s.card → ∃ (a : α) (t : finset α), (t.card = s.card.pred) ∧ (a ∉ t) ∧ (insert a t = s) := 
+begin
+intro sp,
+have scard: s.card = s.card.pred +1,
+have bb:= nat.eq_zero_or_eq_succ_pred s.card,
+cases bb,
+-- bb in "or"
+rw bb at sp,
+cases sp,
+exact bb,
+rw finset.card_eq_succ at scard,
+rcases scard with ⟨ a,t,x ⟩ ,
+use [a,t],
+--tauto,
+rcases x with ⟨ x1,x2,x3⟩ ,
+-- x in "and"
+-- rcases split more than two assumptions
+split,
+exact x3,
+split,
+exact x1,
+exact x2,
+end
 
 example : ∀ f : fin 5 → fin 2, ∃ a b c, (a ≠ b) ∧ (b ≠ c) ∧ (a ≠ c) ∧ (f a = f b) ∧ (f b = f c) :=
 begin
@@ -37,5 +59,8 @@ have inq : fintype.card (fin 2) • 2 < ↑(fintype.card (fin 5)),
 simp,
 linarith,
 have fh' := fintype.exists_lt_card_fiber_of_mul_lt_card f inq,
+cases fh' with y fh'',
+
 sorry
 end
+
