@@ -65,7 +65,7 @@ linarith,},
 
 --exist y<=2 st. the set of x st. f(x)=y have cardinality >2
 have fh' := fintype.exists_lt_card_fiber_of_mul_lt_card f inq,
-{cases fh' with y fh'',},
+cases fh' with y fh'',
 
 --and 0<2
 have zero2:0<2,
@@ -132,10 +132,35 @@ contradiction,},
 
 --f(a)=f(b)
 have amember :=  finset.mem_insert_self a t,
-{rw insert at amember,
-simp at amember,},
+rw insert at amember,
+simp at amember,
+have b_in_t := finset.mem_insert_self b t2,
+rw insert2 at b_in_t,
+have bmember := finset.mem_of_subset (finset.subset_insert a t)(b_in_t),
+rw insert at bmember,
+simp at bmember,
+transitivity y, 
+apply amember,
+symmetry,
+apply bmember,
+
+have b_in_t := finset.mem_insert_self b t2,
+rw insert2 at b_in_t,
+have bmember := finset.mem_of_subset (finset.subset_insert a t)(b_in_t),
+rw insert at bmember,
+simp at bmember,
+have c_in_t₂ := finset.mem_insert_self c t3,
+rw insert3 at c_in_t₂,
+have c_in_t := finset.mem_of_subset (finset.subset_insert b t2) c_in_t₂,
+rw insert2 at c_in_t,
+have cmember := finset.mem_of_subset (finset.subset_insert a t)(c_in_t),
+rw insert at cmember,
+simp at cmember,
+transitivity y, 
+apply bmember,
+symmetry,
+apply cmember,
 
 
-sorry
 end
 
