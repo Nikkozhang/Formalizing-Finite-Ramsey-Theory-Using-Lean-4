@@ -63,44 +63,42 @@ have inq : fintype.card (fin 2) • 2 < ↑(fintype.card (fin 5)),
 {simp,
 linarith,},
 
---exist y<=2 st. the set of x st. f(x)=y have cardinality >2
+--exist y<2 st. the set of x st. f(x)=y have cardinality >2
 have fh' := fintype.exists_lt_card_fiber_of_mul_lt_card f inq,
 cases fh' with y fh'',
 
---and 0<2
-have zero2:0<2,
-{simp,},
-
 --so cardinality >0 (so that we can use pick one lemma)
 have fh''_1:0<(finset.filter (λ (x : fin 5), f x = y) finset.univ).card,
-{exact lt_trans zero2 fh'',},
+{
+transitivity 2,
+simp,
+assumption,
+},
 
 --pick one lemma, want to show {a}+t is the orginal set
-have pickone:= pick_one fh''_1,
-rcases pickone with ⟨a,t,tcard,anotint,insert⟩,
+rcases (pick_one fh''_1) with ⟨a,t,tcard,anotint,insert⟩,
 
 --try to prove tcard>0 so that we can use pick one lemma again
 have tcard1:1<t.card,
 {rw tcard,
 exact nat.lt_pred_iff.mpr fh'',},
 
-have zero1:0<1,
-{simp,},
-
 have tcard0:0<t.card,
-{exact lt_trans zero1 tcard1,},
+{
+transitivity 1,
+simp,
+assumption
+},
 
 --try to prove {b}+t2=t
-have pickone2:=pick_one tcard0,
-rcases pickone2 with ⟨b,t2,t2card,bnotin2,insert2⟩,
+rcases (pick_one tcard0) with ⟨b,t2,t2card,bnotin2,insert2⟩,
 
 have t2card0:0<t2.card,
 {rw t2card,
 exact nat.lt_pred_iff.mpr tcard1, },
 
 --try to prove {c}+t3=t2
-have pickone3:=pick_one t2card0,
-rcases pickone3 with ⟨c,t3,t3card,cnotin3,insert3⟩,
+rcases (pick_one t2card0) with ⟨c,t3,t3card,cnotin3,insert3⟩,
 
 --we have already pick abc, use abc and try to show they are not equal
 use [a,b,c],
@@ -108,16 +106,12 @@ repeat {split},
 
 --a!=b
 {by_contra,
-rw h at anotint,
-rw ← insert2 at anotint,
-simp at anotint,
+simp [h, ← insert2] at anotint,
 assumption,},
 
 --b!=c
 {by_contra,
-rw h at bnotin2,
-rw ← insert3 at bnotin2,
-simp at bnotin2,
+simp [h, ← insert3] at bnotin2,
 assumption,},
 
 --a!=c
@@ -132,34 +126,24 @@ contradiction,},
 
 --f(a)=f(b)
 have amember :=  finset.mem_insert_self a t,
-rw insert at amember,
-simp at amember,
+simp [insert] at amember,
 have b_in_t := finset.mem_insert_self b t2,
 rw insert2 at b_in_t,
 have bmember := finset.mem_of_subset (finset.subset_insert a t)(b_in_t),
-rw insert at bmember,
-simp at bmember,
-transitivity y, 
-apply amember,
-symmetry,
-apply bmember,
+simp [insert] at bmember,
+rw [amember, bmember],
 
 have b_in_t := finset.mem_insert_self b t2,
 rw insert2 at b_in_t,
 have bmember := finset.mem_of_subset (finset.subset_insert a t)(b_in_t),
-rw insert at bmember,
-simp at bmember,
+simp [insert] at bmember,
 have c_in_t₂ := finset.mem_insert_self c t3,
 rw insert3 at c_in_t₂,
 have c_in_t := finset.mem_of_subset (finset.subset_insert b t2) c_in_t₂,
 rw insert2 at c_in_t,
 have cmember := finset.mem_of_subset (finset.subset_insert a t)(c_in_t),
-rw insert at cmember,
-simp at cmember,
-transitivity y, 
-apply bmember,
-symmetry,
-apply cmember,
+simp [insert] at cmember,
+rw [bmember, cmember],
 
 
 end
