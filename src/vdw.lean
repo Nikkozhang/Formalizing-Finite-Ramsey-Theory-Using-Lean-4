@@ -148,6 +148,34 @@ rw [bmember, cmember],
 
 end
 
-lemma pick_one_lo {α : Type} {s : finset α} [linear_order α] : 0 < s.card → ∃ (a : α) (t : finset α), (t.card = s.card.pred) ∧ (∀ a' ∈ t, a < a') ∧ (insert a t = s) := sorry
+lemma pick_one_lo {α : Type} {s : finset α} [linear_order α] : 0 < s.card → ∃ (a : α) (t : finset α), (t.card = s.card.pred) ∧ (∀ a' ∈ t, a < a') ∧ (insert a t = s) := 
+begin
+intro sp,
+rw finset.card_pos at sp,
+let a := finset.min' s sp,
+let t := finset.erase s a,
+use [a,t],
+have a_in_s := finset.min'_mem s sp,
+repeat {split},
+simp [a,t],
+apply finset.card_erase_of_mem,
+apply a_in_s,
+
+--have t_isSub_s := finset.erase_ssubset a_in_s,
+intro a1,
+intro a1_in_t,
+apply finset.min'_lt_of_mem_erase_min' s sp a1_in_t,
+--fact2 := finset.min_mono t s,
+
+apply finset.insert_erase a_in_s,
+
+
+--have t_in_s := (finset.erase_subset a s),
+
+
+
+
+
+end
 
 example : ∀ f : fin 5 → fin 2, ∃ a b c, (a < b) ∧ (b < c) ∧ (f a = f b) ∧ (f b = f c) := sorry
