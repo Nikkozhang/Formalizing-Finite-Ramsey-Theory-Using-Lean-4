@@ -178,4 +178,87 @@ apply finset.insert_erase a_in_s,
 
 end
 
-example : ∀ f : fin 5 → fin 2, ∃ a b c, (a < b) ∧ (b < c) ∧ (f a = f b) ∧ (f b = f c) := sorry
+example : ∀ f : fin 5 → fin 2, ∃ a b c, (a < b) ∧ (b < c) ∧ (f a = f b) ∧ (f b = f c) := 
+
+begin
+intros,
+
+--2*2<5
+have inq : fintype.card (fin 2) • 2 < ↑(fintype.card (fin 5)),
+{simp,
+linarith,},
+
+--exist y<2 st. the set of x st. f(x)=y have cardinality >2
+have fh' := fintype.exists_lt_card_fiber_of_mul_lt_card f inq,
+cases fh' with y fh'',
+
+--so cardinality >0 (so that we can use pick one lemma)
+have fh''_1:0<(finset.filter (λ (x : fin 5), f x = y) finset.univ).card,
+{
+transitivity 2,
+simp,
+assumption,
+},
+
+--pick one lemma, want to show {a}+t is the orginal set
+rcases (pick_one_lo fh''_1) with ⟨a,t,tcard,anotint,insert1⟩,
+
+--try to prove tcard>0 so that we can use pick one lemma again
+have tcard1:1<t.card,
+{rw tcard,
+exact nat.lt_pred_iff.mpr fh'',},
+
+have tcard0:0<t.card,
+{
+transitivity 1,
+simp,
+assumption
+},
+
+--try to prove {b}+t2=t
+rcases (pick_one_lo tcard0) with ⟨b,t2,t2card,bnotin2,insert2⟩,
+
+have t2card0:0<t2.card,
+{rw t2card,
+exact nat.lt_pred_iff.mpr tcard1, },
+
+--try to prove {c}+t3=t2
+rcases (pick_one_lo t2card0) with ⟨c,t3,t3card,cnotin3,insert3⟩,
+
+--we have already pick abc, use abc and try to show they are not equal
+use [a,b,c],
+repeat {split},
+
+--a < b
+{by_contra,
+simp [h, ← insert2] at anotint,
+assumption,},
+
+--b < c
+{by_contra,
+simp [h, ← insert3] at bnotin2,
+assumption,},
+
+--f(a)=f(b)
+have amember :=  finset.mem_insert_self a t,
+simp [insert1] at amember,
+have b_in_t := finset.mem_insert_self b t2,
+rw insert2 at b_in_t,
+have bmember := finset.mem_of_subset (finset.subset_insert a t)(b_in_t),
+simp [insert] at bmember,
+rw [amember, bmember],
+
+have b_in_t := finset.mem_insert_self b t2,
+rw insert2 at b_in_t,
+have bmember := finset.mem_of_subset (finset.subset_insert a t)(b_in_t),
+simp [insert] at bmember,
+have c_in_t₂ := finset.mem_insert_self c t3,
+rw insert3 at c_in_t₂,
+have c_in_t := finset.mem_of_subset (finset.subset_insert b t2) c_in_t₂,
+rw insert2 at c_in_t,
+have cmember := finset.mem_of_subset (finset.subset_insert a t)(c_in_t),
+simp [insert] at cmember,
+rw [bmember, cmember],
+
+
+end
