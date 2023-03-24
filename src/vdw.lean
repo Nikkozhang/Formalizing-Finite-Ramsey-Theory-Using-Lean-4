@@ -240,8 +240,11 @@ simp [h, ← insert3] at bnotin2,
 assumption,},
 
 --f(a)=f(b)
-have amember :=  finset.mem_insert_self a t,
-simp [insert1] at amember,
+rw finset.ext_iff at insert1,
+have amember :=  insert1 a,
+rw finset.mem_insert at amember,
+simp at amember,
+
 have b_in_t := finset.mem_insert_self b t2,
 rw insert2 at b_in_t,
 have bmember := finset.mem_of_subset (finset.subset_insert a t)(b_in_t),
