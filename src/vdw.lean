@@ -224,6 +224,9 @@ exact nat.lt_pred_iff.mpr tcard1, },
 --try to prove {c}+t3=t2
 rcases (pick_one_lo t2card0) with ⟨c,t3,t3card,cnotin3,insert3⟩,
 
+-- Work around a strange unification problem between different versions of insert
+rw finset.ext_iff at *,
+
 --we have already pick abc, use abc and try to show they are not equal
 use [a,b,c],
 repeat {split},
