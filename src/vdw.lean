@@ -125,15 +125,16 @@ rw ← h at fact3,--cases anotint fact3,
 contradiction,},
 
 --f(a)=f(b)
-have amember :=  finset.mem_insert_self a t,
+{have amember :=  finset.mem_insert_self a t,
 simp [insert] at amember,
 have b_in_t := finset.mem_insert_self b t2,
 rw insert2 at b_in_t,
 have bmember := finset.mem_of_subset (finset.subset_insert a t)(b_in_t),
 simp [insert] at bmember,
-rw [amember, bmember],
+rw [amember, bmember],},
 
-have b_in_t := finset.mem_insert_self b t2,
+--f(b)=f(c)
+{have b_in_t := finset.mem_insert_self b t2,
 rw insert2 at b_in_t,
 have bmember := finset.mem_of_subset (finset.subset_insert a t)(b_in_t),
 simp [insert] at bmember,
@@ -143,34 +144,32 @@ have c_in_t := finset.mem_of_subset (finset.subset_insert b t2) c_in_t₂,
 rw insert2 at c_in_t,
 have cmember := finset.mem_of_subset (finset.subset_insert a t)(c_in_t),
 simp [insert] at cmember,
-rw [bmember, cmember],
+rw [bmember, cmember],},
 
 
 end
 
 lemma pick_one_lo {α : Type} {s : finset α} [linear_order α] : 0 < s.card → ∃ (a : α) (t : finset α), (t.card = s.card.pred) ∧ (∀ a' ∈ t, a < a') ∧ (insert a t = s) := 
 begin
+
 intro sp,
 rw finset.card_pos at sp,
-let a := finset.min' s sp,
-let t := finset.erase s a,
+let a := s.min' sp, 
+let t := s.erase a,
 use [a,t],
-have a_in_s := finset.min'_mem s sp,
-repeat {split},
-simp [a,t],
-apply finset.card_erase_of_mem,
-apply a_in_s,
 
---have t_isSub_s := finset.erase_ssubset a_in_s,
-intro a1,
+have a_in_s := s.min'_mem sp,
+repeat {split},
+
+{simp [a,t],
+apply finset.card_erase_of_mem,
+apply a_in_s,},
+
+{intro a1,
 intro a1_in_t,
-apply finset.min'_lt_of_mem_erase_min' s sp a1_in_t,
---fact2 := finset.min_mono t s,
+apply s.min'_lt_of_mem_erase_min' sp a1_in_t,},
 
 apply finset.insert_erase a_in_s,
-
-
---have t_in_s := (finset.erase_subset a s),
 
 
 
@@ -240,11 +239,13 @@ simp [h, ← insert3] at bnotin2,
 assumption,},
 
 --f(a)=f(b)
+{
+-- a ∈ t ∪ {a} => f(a) = y
 rw finset.ext_iff at insert1,
 have amember :=  insert1 a,
 rw finset.mem_insert at amember,
-simp at amember,
-
+simp at amember, 
+-- b ∈ t ∪ {a} => f(b) = y
 rw finset.ext_iff at insert2,
 have b_in_t := insert2 b,
 rw finset.mem_insert at b_in_t,
@@ -252,29 +253,36 @@ simp at b_in_t,
 have bmember := insert1 b,
 simp [finset.mem_of_subset (finset.subset_insert a t)(b_in_t)] at bmember,
 simp [b_in_t] at bmember,
-rw [amember, bmember],
+rw [amember, bmember],},
 
-
-
-rw finset.ext_iff at insert1,
+{rw finset.ext_iff at insert1,
 rw finset.ext_iff at insert2,
 rw finset.ext_iff at insert3,
+
+-- b ∈ t ∪ {a} => f(b) = y
 have b_in_t := insert2 b,
-have c_in_t₂ := insert3 c, 
-have c_in_t := insert2 c,
 rw finset.mem_insert at b_in_t,
 simp at b_in_t,
-rw finset.mem_insert at c_in_t₂,
-rw finset.mem_insert at c_in_t,
-simp at c_in_t₂,
-simp [c_in_t₂]at c_in_t,
 have bmember := insert1 b,
 simp [finset.mem_of_subset (finset.subset_insert a t)(b_in_t)] at bmember,
 simp [b_in_t] at bmember,
+
+-- c ∈ t₂
+have c_in_t₂ := insert3 c, 
+rw finset.mem_insert at c_in_t₂,
+simp at c_in_t₂,
+
+-- c ∈ t
+have c_in_t := insert2 c,
+rw finset.mem_insert at c_in_t,
+simp [c_in_t₂]at c_in_t,
+
+
+-- c ∈ t ∪ {a} => f(c) = y
 have cmember := insert1 c,
 simp [finset.mem_of_subset (finset.subset_insert a t)(c_in_t)] at cmember,
 simp [c_in_t] at cmember,
-rw [bmember,cmember],
+rw [bmember,cmember],},
 
 
 end
