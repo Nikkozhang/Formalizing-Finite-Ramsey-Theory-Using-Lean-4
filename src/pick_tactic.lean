@@ -102,6 +102,7 @@ meta def pick : ℕ → expr → tactic (list (name × expr))
     ainst ← tactic.get_local ainstname,
     tactic.trace ainst,
     ainparent ← tactic.to_expr ``(@eq.subst _ (λ x, %%elem ∈ x) _ _ %%ainst (finset.mem_insert_self %%elem %%subset)),
+    tactic.clear_lst [ainstname, anotintname, atcardname, subsetname],
     return [(elemname, ainparent)]
   }
 | (nat.succ n) bineq := do {
@@ -138,6 +139,7 @@ meta def pick : ℕ → expr → tactic (list (name × expr))
         ainst ← tactic.get_local ainstname,
         tactic.trace ainst,
         ainparent ← tactic.to_expr ``(@eq.subst _ (λ x, %%elem ∈ x) _ _ %%ainst (finset.mem_insert_self %%elem %%subset)),
+        tactic.clear_lst [ainstname, anotintname, atcardname, newboundname, subsetname],
         return ((elemname, ainparent) :: rec)
       }
     | none := tactic.fail "Somehow the bound was not a nat"
