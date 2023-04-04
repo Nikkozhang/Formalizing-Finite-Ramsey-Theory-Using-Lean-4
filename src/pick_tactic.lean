@@ -5,7 +5,7 @@ open interactive.types (texpr with_ident_list)
 open lean.parser (val ident tk small_nat)
 open tactic.interactive («have»)
 
-lemma pick_one_eq {α : Type} {s : finset α} [decidable_eq α] : 0 < s.card → ∃ (a : α) (t : finset α), (t.card = s.card.pred) ∧ (a ∉ t) ∧ (insert a t = s) := 
+lemma pick_one_eq {α : Type} {s : finset α} [decidable_eq α] : 0 < s.card → ∃ (a : α) (t : finset α), (t.card = s.card.pred) ∧ (a ∉ t) ∧ (insert a t = s) :=
 begin
 intro sp,
 have scard: s.card = s.card.pred +1,
@@ -18,42 +18,25 @@ exact bb,
 rw finset.card_eq_succ at scard,
 rcases scard with ⟨ a,t,x ⟩ ,
 use [a,t],
---tauto,
-rcases x with ⟨ x1,x2,x3⟩ ,
--- x in "and"
--- rcases split more than two assumptions
-split,
-exact x3,
-split,
-exact x1,
-exact x2,
+tauto,
 end
 
-lemma pick_one_lo {α : Type} {s : finset α} [linear_order α] : 0 < s.card → ∃ (a : α) (t : finset α), (t.card = s.card.pred) ∧ (∀ a' ∈ t, a < a') ∧ (insert a t = s) := 
+lemma pick_one_lo {α : Type} {s : finset α} [linear_order α] : 0 < s.card → ∃ (a : α) (t : finset α), (t.card = s.card.pred) ∧ (∀ a' ∈ t, a < a') ∧ (insert a t = s) :=
 begin
-
 intro sp,
 rw finset.card_pos at sp,
-let a := s.min' sp, 
+let a := s.min' sp,
 let t := s.erase a,
 use [a,t],
-
 have a_in_s := s.min'_mem sp,
 repeat {split},
-
 {simp [a,t],
 apply finset.card_erase_of_mem,
 apply a_in_s,},
-
 {intro a1,
 intro a1_in_t,
 apply s.min'_lt_of_mem_erase_min' sp a1_in_t,},
-
 apply finset.insert_erase a_in_s,
-
-
-
-
 end
 
 meta def pick_diff (a : expr) (anotint : expr) (info : name × expr) : tactic unit :=
