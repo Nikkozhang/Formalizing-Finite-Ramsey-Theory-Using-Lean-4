@@ -4,8 +4,6 @@ import algebra.big_operators.basic
 import data.fin.basic
 import combinatorics.pigeonhole
 
-import tactic
-
 import .pick_tactic
 
 def arithprog(a b c:ℕ):Prop:=∃ k:ℕ, (b=a+k) ∧ (c=b+k)
