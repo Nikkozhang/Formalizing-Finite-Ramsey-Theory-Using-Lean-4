@@ -5,6 +5,8 @@ open interactive.types (texpr with_ident_list)
 open lean.parser (val ident tk small_nat)
 open tactic.interactive («have»)
 
+inductive pick_mode | lo : pick_mode | eq : pick_mode
+
 lemma pick_one_eq {α : Type} {s : finset α} [decidable_eq α] : 0 < s.card → ∃ (a : α) (t : finset α), (t.card = s.card.pred) ∧ (a ∉ t) ∧ (insert a t = s) :=
 begin
 intro sp,
@@ -45,6 +47,16 @@ do {
   `(_ ∉ %%t) ← tactic.infer_type anotint,
   neqexpr ← tactic.to_expr ``(%%a ≠ %%b),
   neqproof ← tactic.to_expr ``(λ x, %%anotint (@eq.subst _ (λ y, y ∈ %%t) _ _ (eq.symm x) %%info.snd)),
+  neqname ← tactic.get_unused_name "neq",
+  tactic.assertv neqname neqexpr neqproof,
+  return()
+}
+
+meta def pick_lt (a : expr) (altt : expr) (info : name × expr) : tactic unit :=
+do {
+  b ← tactic.get_local info.fst,
+  neqexpr ← tactic.to_expr ``(%%a < %%b),
+  neqproof ← tactic.to_expr ``(%%altt %%b %%info.snd),
   ineqprooft ← tactic.infer_type neqproof,
   neqname ← tactic.get_unused_name "neq",
   tactic.assertv neqname neqexpr neqproof,
@@ -60,11 +72,19 @@ do {
   return ()
 }
 
-meta def pick_upgrade (ainst : expr) (info : name × expr) : tactic (name × expr) :=
+meta def pick_upgrade (mode : pick_mode) (ainst : expr) (info : name × expr) : tactic (name × expr) :=
 do {
   `(insert %%a %%t = %%s) ← tactic.infer_type ainst,
   b ← tactic.get_local info.fst,
-  subseqeqexpr ← tactic.to_expr ``(((finset.ext_iff.mp %%ainst) %%b).mp (finset.subset_iff.mp (finset.subset_insert %%a %%t) %%info.snd)),
+  subseqeqexpr ← match mode with
+                 | pick_mode.eq := tactic.to_expr ``(((finset.ext_iff.mp %%ainst) %%b).mp (finset.subset_iff.mp (finset.subset_insert %%a %%t) %%info.snd))
+                 | pick_mode.lo := do {
+                                     α ← tactic.infer_type b,
+                                     loclass ← tactic.to_expr  ``(linear_order %%α),
+                                     loinst ← tactic.mk_instance loclass,
+                                     tactic.to_expr ``(((finset.ext_iff.mp %%ainst) %%b).mp (finset.subset_iff.mp (@finset.subset_insert _ (%%loinst).decidable_eq %%a %%t) %%info.snd))
+                                  }
+                 end,
   return (info.fst, subseqeqexpr)
 }
 
@@ -72,7 +92,7 @@ do {
 -- fst: the name of a member obtained in a recursive call
 -- snd: the name of the fact that that member belongs to the rest of the set of this level
 -- It is the responsibility of each level to upgrade the recursive list for the calling level
-meta def pick : ℕ → expr → tactic (list (name × expr))
+meta def pick (mode : pick_mode) : ℕ → expr → tactic (list (name × expr))
 | nat.zero bineq := do {
     tactic.trace "here",
     tactic.trace bineq,
@@ -89,10 +109,16 @@ meta def pick : ℕ → expr → tactic (list (name × expr))
     match b.to_nat with
     | some b' := match b' with
         | nat.zero := do {
-            tactic.rcases none ``(pick_one_eq %%bineq) (tactic.rcases_patt.tuple (list.map tactic.rcases_patt.one [elemname, subsetname, atcardname, anotintname, ainstname]))
+            match mode with
+            | pick_mode.eq := do tactic.rcases none ``(pick_one_eq %%bineq) (tactic.rcases_patt.tuple (list.map tactic.rcases_patt.one [elemname, subsetname, atcardname, anotintname, ainstname]))
+            | pick_mode.lo := do tactic.rcases none ``(pick_one_lo %%bineq) (tactic.rcases_patt.tuple (list.map tactic.rcases_patt.one [elemname, subsetname, atcardname, anotintname, ainstname]))
+            end
           }
         | nat.succ b'' := do {
-            tactic.rcases none ``(pick_one_eq (lt_of_le_of_lt (nat.zero_le %%b) %%bineq)) (tactic.rcases_patt.tuple (list.map tactic.rcases_patt.one [elemname, subsetname, atcardname, anotintname, ainstname]))
+            match mode with
+            | pick_mode.eq := do tactic.rcases none ``(pick_one_eq (lt_of_le_of_lt (nat.zero_le %%b) %%bineq)) (tactic.rcases_patt.tuple (list.map tactic.rcases_patt.one [elemname, subsetname, atcardname, anotintname, ainstname]))
+            | pick_mode.lo := do tactic.rcases none ``(pick_one_lo (lt_of_le_of_lt (nat.zero_le %%b) %%bineq)) (tactic.rcases_patt.tuple (list.map tactic.rcases_patt.one [elemname, subsetname, atcardname, anotintname, ainstname]))
+            end
           }
       end
     | none := tactic.fail "Somehow the bound was not a nat"
@@ -101,7 +127,14 @@ meta def pick : ℕ → expr → tactic (list (name × expr))
     subset ← tactic.get_local subsetname,
     ainst ← tactic.get_local ainstname,
     tactic.trace ainst,
-    ainparent ← tactic.to_expr ``(@eq.subst _ (λ x, %%elem ∈ x) _ _ %%ainst (finset.mem_insert_self %%elem %%subset)),
+    ainparent ← match mode with
+                | pick_mode.eq := tactic.to_expr ``(@eq.subst _ (λ x, %%elem ∈ x) _ _ %%ainst (finset.mem_insert_self %%elem %%subset))
+                | pick_mode.lo := do {
+                                    loclass ← tactic.to_expr  ``(linear_order %%α),
+                                    loinst ← tactic.mk_instance loclass,
+                                    tactic.to_expr ``(@eq.subst _ (λ x, %%elem ∈ x) _ _ %%ainst (@finset.mem_insert_self _ (%%loinst).decidable_eq %%elem %%subset))
+                                  }
+                end,
     tactic.clear_lst [ainstname, anotintname, atcardname, subsetname],
     return [(elemname, ainparent)]
   }
@@ -114,7 +147,11 @@ meta def pick : ℕ → expr → tactic (list (name × expr))
     atcardname ← tactic.get_unused_name "atcard",
     anotintname ← tactic.get_unused_name "anotint",
     ainstname ← tactic.get_unused_name "ainst",
-    tactic.rcases none ``(pick_one_eq (lt_of_le_of_lt (nat.zero_le %%b) %%bineq)) (tactic.rcases_patt.tuple (list.map tactic.rcases_patt.one [elemname, subsetname, atcardname, anotintname, ainstname])),
+    match mode with
+    | pick_mode.eq := do tactic.rcases none ``(pick_one_eq (lt_of_le_of_lt (nat.zero_le %%b) %%bineq)) (tactic.rcases_patt.tuple (list.map tactic.rcases_patt.one [elemname, subsetname, atcardname, anotintname, ainstname]))
+
+    | pick_mode.lo := do tactic.rcases none ``(pick_one_lo (lt_of_le_of_lt (nat.zero_le %%b) %%bineq)) (tactic.rcases_patt.tuple (list.map tactic.rcases_patt.one [elemname, subsetname, atcardname, anotintname, ainstname]))
+    end,
     subset ← tactic.resolve_name subsetname,
     atcard ← tactic.resolve_name atcardname,
     match b.to_nat with
@@ -131,14 +168,24 @@ meta def pick : ℕ → expr → tactic (list (name × expr))
         rec ← pick n localbound,
         elem ← tactic.get_local elemname,
         atnotint ← tactic.get_local anotintname,
-        list.mmap' (λ i, pick_diff elem atnotint i) rec,
+        match mode with
+        | pick_mode.eq := list.mmap' (λ i, pick_diff elem atnotint i) rec
+        | pick_mode.lo := pick_lt elem atnotint rec.head
+        end,
         ainst ← tactic.get_local ainstname,
-        rec ← list.mmap (λ i, pick_upgrade ainst i) rec,
+        rec ← list.mmap (λ i, pick_upgrade mode ainst i) rec,
         elem ← tactic.get_local elemname,
         subset ← tactic.get_local subsetname,
         ainst ← tactic.get_local ainstname,
         tactic.trace ainst,
-        ainparent ← tactic.to_expr ``(@eq.subst _ (λ x, %%elem ∈ x) _ _ %%ainst (finset.mem_insert_self %%elem %%subset)),
+        ainparent ← match mode with
+                    | pick_mode.eq := tactic.to_expr ``(@eq.subst _ (λ x, %%elem ∈ x) _ _ %%ainst (finset.mem_insert_self %%elem %%subset))
+                    | pick_mode.lo := do {
+                                        loclass ← tactic.to_expr ``(linear_order %%α),
+                                        loinst ← tactic.mk_instance loclass,
+                                        tactic.to_expr ``(@eq.subst _ (λ x, %%elem ∈ x) _ _ %%ainst (@finset.mem_insert_self _ (%%loinst).decidable_eq %%elem %%subset))
+                                      }
+                    end,
         tactic.clear_lst [ainstname, anotintname, atcardname, newboundname, subsetname],
         return ((elemname, ainparent) :: rec)
       }
@@ -146,23 +193,43 @@ meta def pick : ℕ → expr → tactic (list (name × expr))
     end
   }
 
+meta def pick_detect_mode (α : expr) : tactic pick_mode :=
+  do {
+    loclass ← tactic.to_expr ``(linear_order %%α),
+    loinst ← tactic.mk_instance loclass,
+    eqclass ← tactic.to_expr ``((%%loinst).decidable_eq),
+    tactic.trace "working with linear order",
+    tactic.trace loinst,
+    tactic.trace eqclass,
+    return pick_mode.lo
+  } <|>
+  do {
+    tactic.trace "no linear order, checking dec_eq...",
+    eqclass ← tactic.to_expr ``(decidable_eq %%α),
+    tactic.mk_instance eqclass,
+    tactic.trace "working with decidable equality",
+    return pick_mode.eq
+  } <|> tactic.fail ("No linear_order or decidable_eq in type " ++ (to_string α))
+
 meta def tactic.interactive.pick (k : parse small_nat) (stexp : parse (tk "from" *> texpr)) : tactic unit :=
 do
-  ctx ← tactic.local_context, 
+  ctx ← tactic.local_context,
   sexp ← tactic.i_to_expr stexp,
   ineqexp ← tactic.to_expr ``(_ < (finset.card %%sexp)),
   exp ← tactic.find_assumption ineqexp,
   etype ← tactic.infer_type exp,
   `(%%b < (finset.card %%l)) ← tactic.infer_type exp,
+  `(finset %%α) ← tactic.infer_type l,
+  tactic.trace α,
+  mode ← pick_detect_mode α,
   match b.to_nat with
   | some c := if c.succ < k then tactic.fail "Picking too many elements!" else
               match k with
               | nat.zero := tactic.fail "Pick at least one element!"
               | (nat.succ k') := do {
-                  tactic.trace k',
-                  newobjs ← pick k' exp,
-                  list.mmap' tactic.trace newobjs,
-                  list.mmap' (λ i, pick_wrapup l i) newobjs
+                  newobjs ← pick mode k' exp,
+                  list.mmap' (λ i, pick_wrapup l i) newobjs,
+                  list.mmap' tactic.trace newobjs
                 }
               end
   | none := tactic.fail ("Assumption " ++ (to_string exp) ++ " is not a good bound.")
