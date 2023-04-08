@@ -1,6 +1,7 @@
 import data.finset.card
 import data.fintype.basic
 import algebra.big_operators.basic
+import data.bitvec.core
 import data.fin.basic
 import combinatorics.pigeonhole
 
