@@ -41,31 +41,33 @@ apply s.min'_lt_of_mem_erase_min' sp a1_in_t,},
 apply finset.insert_erase a_in_s,
 end
 
-meta def pick_diff (a : expr) (anotint : expr) (info : name × expr) : tactic unit :=
+meta def pick_diff (a : name) (anotint : expr) (info : name × expr) : tactic unit :=
 do {
+  aexpr ← tactic.get_local a,
   b ← tactic.get_local info.fst,
   `(_ ∉ %%t) ← tactic.infer_type anotint,
-  neqexpr ← tactic.to_expr ``(%%a ≠ %%b),
+  neqexpr ← tactic.to_expr ``(%%aexpr ≠ %%b),
   neqproof ← tactic.to_expr ``(λ x, %%anotint (@eq.subst _ (λ y, y ∈ %%t) _ _ (eq.symm x) %%info.snd)),
-  neqname ← tactic.get_unused_name "neq",
+  neqname ← tactic.get_unused_name (a ++ "neq" ++ info.fst),
   tactic.assertv neqname neqexpr neqproof,
   return()
 }
 
-meta def pick_lt (a : expr) (altt : expr) (info : name × expr) : tactic unit :=
+meta def pick_lt (a : name) (altt : expr) (info : name × expr) : tactic unit :=
 do {
+  aexpr ← tactic.get_local a,
   b ← tactic.get_local info.fst,
-  neqexpr ← tactic.to_expr ``(%%a < %%b),
+  neqexpr ← tactic.to_expr ``(%%aexpr < %%b),
   neqproof ← tactic.to_expr ``(%%altt %%b %%info.snd),
   ineqprooft ← tactic.infer_type neqproof,
-  neqname ← tactic.get_unused_name "neq",
+  neqname ← tactic.get_unused_name (a ++ "lt" ++ info.fst),
   tactic.assertv neqname neqexpr neqproof,
   return()
 }
 
 meta def pick_wrapup (s : expr) (info : name × expr) : tactic unit :=
 do {
-  n ← tactic.get_unused_name "wr",
+  n ← tactic.get_unused_name (info.fst ++ "elem"),
   a ← tactic.get_local info.fst,
   inexpr ← tactic.to_expr ``(%%a ∈ %%s),
   tactic.assertv n inexpr info.snd,
@@ -92,8 +94,8 @@ do {
 -- fst: the name of a member obtained in a recursive call
 -- snd: the name of the fact that that member belongs to the rest of the set of this level
 -- It is the responsibility of each level to upgrade the recursive list for the calling level
-meta def pick (mode : pick_mode) : ℕ → expr → tactic (list (name × expr))
-| nat.zero bineq := do {
+meta def pick (mode : pick_mode) : ℕ → list name → expr → tactic (list (name × expr))
+| nat.zero names bineq := do {
     tactic.trace "here",
     tactic.trace bineq,
     omg ← tactic.infer_type bineq,
@@ -101,7 +103,7 @@ meta def pick (mode : pick_mode) : ℕ → expr → tactic (list (name × expr))
     `(%%b < (finset.card %%s)) ← tactic.infer_type bineq,
     `(finset %%α) ← tactic.infer_type s,
     tactic.trace b, tactic.trace s,
-    elemname ← tactic.get_unused_name "a",
+    let elemname := names.head,
     subsetname ← tactic.get_unused_name "t",
     atcardname ← tactic.get_unused_name "atcard",
     anotintname ← tactic.get_unused_name "anotint",
@@ -138,11 +140,11 @@ meta def pick (mode : pick_mode) : ℕ → expr → tactic (list (name × expr))
     tactic.clear_lst [ainstname, anotintname, atcardname, subsetname],
     return [(elemname, ainparent)]
   }
-| (nat.succ n) bineq := do {
+| (nat.succ n) names bineq := do {
     `(%%b < (finset.card %%s)) ← tactic.infer_type bineq,
     `(finset %%α) ← tactic.infer_type s,
     tactic.trace b, tactic.trace s,
-    elemname ← tactic.get_unused_name "a",
+    let elemname := names.head,
     subsetname ← tactic.get_unused_name "t",
     atcardname ← tactic.get_unused_name "atcard",
     anotintname ← tactic.get_unused_name "anotint",
@@ -165,12 +167,12 @@ meta def pick (mode : pick_mode) : ℕ → expr → tactic (list (name × expr))
         localbound ← tactic.get_local newboundname,
         tactic.simp_hyp simpdefault [] localbound,
         localbound ← tactic.get_local newboundname,
-        rec ← pick n localbound,
+        rec ← pick n names.tail localbound,
         elem ← tactic.get_local elemname,
         atnotint ← tactic.get_local anotintname,
         match mode with
-        | pick_mode.eq := list.mmap' (λ i, pick_diff elem atnotint i) rec
-        | pick_mode.lo := pick_lt elem atnotint rec.head
+        | pick_mode.eq := list.mmap' (λ i, pick_diff elemname atnotint i) rec
+        | pick_mode.lo := pick_lt elemname atnotint rec.head
         end,
         ainst ← tactic.get_local ainstname,
         rec ← list.mmap (λ i, pick_upgrade mode ainst i) rec,
@@ -211,8 +213,9 @@ meta def pick_detect_mode (α : expr) : tactic pick_mode :=
     return pick_mode.eq
   } <|> tactic.fail ("No linear_order or decidable_eq in type " ++ (to_string α))
 
-meta def tactic.interactive.pick (k : parse small_nat) (stexp : parse (tk "from" *> texpr)) : tactic unit :=
+meta def tactic.interactive.pick (k : parse small_nat) (stexp : parse (tk "from" *> texpr)) (names : parse (with_ident_list)) : tactic unit :=
 do
+  if k ≠ names.length then tactic.fail "Not enough names." else tactic.skip,
   ctx ← tactic.local_context,
   sexp ← tactic.i_to_expr stexp,
   ineqexp ← tactic.to_expr ``(_ < (finset.card %%sexp)),
@@ -227,7 +230,7 @@ do
               match k with
               | nat.zero := tactic.fail "Pick at least one element!"
               | (nat.succ k') := do {
-                  newobjs ← pick mode k' exp,
+                  newobjs ← pick mode k' names exp,
                   list.mmap' (λ i, pick_wrapup l i) newobjs,
                   list.mmap' tactic.trace newobjs
                 }
