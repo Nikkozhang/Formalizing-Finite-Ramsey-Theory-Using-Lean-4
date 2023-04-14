@@ -37,7 +37,35 @@ linarith,},
 have fh' := fintype.exists_lt_card_fiber_of_mul_lt_card f inq,
 cases fh' with y fh'',
 pick 3 from (finset.filter (λ (x : fin 5), f x = y) finset.univ),
-sorry
+use [a, a_1, a_2],
+repeat{split},
+
+by_contra,
+rw h at neq_1,
+simp at neq_1,
+exact neq_1,
+
+by_contra,
+rw h at neq,
+simp at neq,
+exact neq,
+
+by_contra,
+have h1 : a < a_2,
+transitivity a_1,
+exact neq_1,
+exact neq,
+rw h at h1,
+simp at h1,
+exact h1,
+
+simp at wr,
+simp at wr_1,
+rw [wr,wr_1],
+
+simp at wr_1,
+simp at wr_2,
+rw [wr_1,wr_2],
 end
 
 example : ∀ f : fin 5 → fin 2, ∃ a b c, (a < b) ∧ (b < c) ∧ (f a = f b) ∧ (f b = f c) := 
@@ -52,7 +80,18 @@ linarith,},
 --exist y<2 st. the set of x st. f(x)=y have cardinality >2
 have fh' := fintype.exists_lt_card_fiber_of_mul_lt_card f inq,
 cases fh' with y fh'',
-sorry
+pick 3 from (finset.filter (λ (x : fin 5), f x = y) finset.univ),
+use [a,a_1,a_2],
+repeat {split},
+exact neq_1,
+exact neq,
+simp at wr,
+simp at wr_1,
+rw [wr,wr_1],
+
+simp at wr_1,
+simp at wr_2,
+rw [wr_1,wr_2],
 end
 
 lemma vdW325 : vdW_prop 325 2 :=
