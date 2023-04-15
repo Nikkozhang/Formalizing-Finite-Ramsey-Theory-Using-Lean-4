@@ -36,7 +36,7 @@ linarith,},
 --exist y<2 st. the set of x st. f(x)=y have cardinality >2
 have fh' := fintype.exists_lt_card_fiber_of_mul_lt_card f inq,
 cases fh' with y fh'',
-pick 3 from (finset.filter (λ (x : fin 5), f x = y) finset.univ),
+pick 3 from (finset.filter (λ (x : fin 5), f x = y) finset.univ) with a b c,
 use [a, a_1, a_2],
 repeat{split},
 
