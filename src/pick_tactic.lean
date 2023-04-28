@@ -96,13 +96,10 @@ do {
 -- It is the responsibility of each level to upgrade the recursive list for the calling level
 meta def pick (mode : pick_mode) : ℕ → list name → expr → tactic (list (name × expr))
 | nat.zero names bineq := do {
-    tactic.trace "here",
-    tactic.trace bineq,
-    omg ← tactic.infer_type bineq,
-    tactic.trace omg,
+    -- tactic.trace bineq,
     `(%%b < (finset.card %%s)) ← tactic.infer_type bineq,
     `(finset %%α) ← tactic.infer_type s,
-    tactic.trace b, tactic.trace s,
+    -- tactic.trace b, tactic.trace s,
     let elemname := names.head,
     subsetname ← tactic.get_unused_name "t",
     atcardname ← tactic.get_unused_name "atcard",
@@ -128,7 +125,7 @@ meta def pick (mode : pick_mode) : ℕ → list name → expr → tactic (list (
     elem ← tactic.get_local elemname,
     subset ← tactic.get_local subsetname,
     ainst ← tactic.get_local ainstname,
-    tactic.trace ainst,
+    -- tactic.trace ainst,
     ainparent ← match mode with
                 | pick_mode.eq := tactic.to_expr ``(@eq.subst _ (λ x, %%elem ∈ x) _ _ %%ainst (finset.mem_insert_self %%elem %%subset))
                 | pick_mode.lo := do {
@@ -143,7 +140,7 @@ meta def pick (mode : pick_mode) : ℕ → list name → expr → tactic (list (
 | (nat.succ n) names bineq := do {
     `(%%b < (finset.card %%s)) ← tactic.infer_type bineq,
     `(finset %%α) ← tactic.infer_type s,
-    tactic.trace b, tactic.trace s,
+    -- tactic.trace b, tactic.trace s,
     let elemname := names.head,
     subsetname ← tactic.get_unused_name "t",
     atcardname ← tactic.get_unused_name "atcard",
@@ -179,7 +176,7 @@ meta def pick (mode : pick_mode) : ℕ → list name → expr → tactic (list (
         elem ← tactic.get_local elemname,
         subset ← tactic.get_local subsetname,
         ainst ← tactic.get_local ainstname,
-        tactic.trace ainst,
+        -- tactic.trace ainst,
         ainparent ← match mode with
                     | pick_mode.eq := tactic.to_expr ``(@eq.subst _ (λ x, %%elem ∈ x) _ _ %%ainst (finset.mem_insert_self %%elem %%subset))
                     | pick_mode.lo := do {
@@ -200,16 +197,16 @@ meta def pick_detect_mode (α : expr) : tactic pick_mode :=
     loclass ← tactic.to_expr ``(linear_order %%α),
     loinst ← tactic.mk_instance loclass,
     eqclass ← tactic.to_expr ``((%%loinst).decidable_eq),
-    tactic.trace "working with linear order",
-    tactic.trace loinst,
-    tactic.trace eqclass,
+    -- tactic.trace "working with linear order",
+    -- tactic.trace loinst,
+    -- tactic.trace eqclass,
     return pick_mode.lo
   } <|>
   do {
-    tactic.trace "no linear order, checking dec_eq...",
+    -- tactic.trace "no linear order, checking dec_eq...",
     eqclass ← tactic.to_expr ``(decidable_eq %%α),
     tactic.mk_instance eqclass,
-    tactic.trace "working with decidable equality",
+    -- tactic.trace "working with decidable equality",
     return pick_mode.eq
   } <|> tactic.fail ("No linear_order or decidable_eq in type " ++ (to_string α))
 
@@ -223,7 +220,7 @@ do
   etype ← tactic.infer_type exp,
   `(%%b < (finset.card %%l)) ← tactic.infer_type exp,
   `(finset %%α) ← tactic.infer_type l,
-  tactic.trace α,
+  -- tactic.trace α,
   mode ← pick_detect_mode α,
   match b.to_nat with
   | some c := if c.succ < k then tactic.fail "Picking too many elements!" else
@@ -231,8 +228,8 @@ do
               | nat.zero := tactic.fail "Pick at least one element!"
               | (nat.succ k') := do {
                   newobjs ← pick mode k' names exp,
-                  list.mmap' (λ i, pick_wrapup l i) newobjs,
-                  list.mmap' tactic.trace newobjs
+                  -- list.mmap' tactic.trace newobjs,
+                  list.mmap' (λ i, pick_wrapup l i) newobjs
                 }
               end
   | none := tactic.fail ("Assumption " ++ (to_string exp) ++ " is not a good bound.")
