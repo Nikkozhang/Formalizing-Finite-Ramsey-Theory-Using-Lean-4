@@ -1,27 +1,32 @@
 import data.finset.card
 import data.fintype.basic
-import algebra.big_operators.basic
 import data.bitvec.core
 import data.fin.basic
 import combinatorics.pigeonhole
+import data.nat.lattice
 
 import .pick_tactic
 
-def arithprog(a b c:ℕ):Prop:=∃ k:ℕ, (b=a+k) ∧ (c=b+k)
+structure arithprog (α : Type) (length : ℕ) [has_add α] := (start : α) (diff : α)
 
-def vdW_prop (N : ℕ) (r : ℕ) : Prop := ∀ f : ℕ → fin r, ∃ (a b c : fin N), (arithprog a b c) ∧ (f a = f b) ∧ (f b = f c)
+instance {α : Type} {l : ℕ} [has_add α] : has_mem α (arithprog α l) := ⟨λ a s, ∃ (i : fin l), a = nat.iterate (λ j : α, j + s.diff) i.val s.start⟩
 
-lemma vdW_monotone : ∀ n r, vdW_prop n r → ∀ m, n ≤ m → vdW_prop m r :=
+def vdW_prop (N : ℕ) (k : ℕ) (r : ℕ) : Prop := ∀ f : ℕ → fin r, ∃ (s : arithprog ℕ k) (c : fin r), s.diff > 0 ∧ (∀ e ∈ s, e < N ∧ f e = c)
+
+lemma vdW_monotone : ∀ n k r, vdW_prop n k r → ∀ m, n ≤ m → vdW_prop m k r :=
 begin
-intros,
 unfold vdW_prop,
-intro,
-unfold vdW_prop at ᾰ,
-have abc: ∃ (a b c : fin n), arithprog ↑a ↑b ↑c ∧ f ↑a = f ↑b ∧ f ↑b = f ↑c,
-apply ᾰ,
-rcases abc with ⟨x, y, z, xyz_h⟩,
-use [⟨x, lt_of_lt_of_le x.2 ᾰ_1⟩, ⟨y, lt_of_lt_of_le y.2 ᾰ_1⟩, ⟨z, lt_of_lt_of_le z.2 ᾰ_1⟩],
-apply xyz_h,
+intros _ _ _ vdwn _  nleqm _,
+rcases (vdwn f) with ⟨s, c, sdiff, eprop⟩,
+-- use { start := s.start, diff := s.diff},
+use [s, c],
+split,
+assumption,
+intros _ eins,
+rcases (eprop e eins) with ⟨eltn, ecolor⟩,
+split,
+apply lt_of_lt_of_le eltn nleqm,
+assumption,
 end
 
 example : ∀ f : fin 5 → fin 2, ∃ a b c, (a ≠ b) ∧ (b ≠ c) ∧ (a ≠ c) ∧ (f a = f b) ∧ (f b = f c) :=
@@ -78,7 +83,7 @@ rw [a.elem,b.elem],
 rw [b.elem,c.elem],
 end
 
-lemma vdW325 : vdW_prop 325 2 :=
+lemma vdW325 : vdW_prop 325 3 2 :=
 begin
 unfold vdW_prop,
 intros,
@@ -89,14 +94,29 @@ simp,
 linarith,
 have ghyp := fintype.exists_lt_card_fiber_of_mul_lt_card g fin533,
 rcases ghyp with ⟨y₅, y₅hyp⟩,
-pick 2 from (finset.filter (λ (x : fin 33), g x = y₅) finset.univ) with a b,
-simp at a.elem b.elem,
-
-let targetfinset := (insert (5 * a.val) (insert (5 * a.val + 1) (insert (5 * a.val + 2) (∅:(finset ℕ))))),
+pick 2 from (finset.filter (λ (x : fin 33), g x = y₅) finset.univ) with block₁ block₂,
+simp at block₁.elem block₂.elem,
+let targetfinset := (insert (5 * block₁.val) (insert (5 * block₁.val + 1) (insert (5 * block₁.val + 2) (∅:(finset ℕ))))),
 have fin25 : fintype.card (fin 2) • 1 <  fintype.card ↥targetfinset := by simp,
-let f' : (insert (5 * a.val) (insert (5 * a.val + 1) (insert (5 * a.val + 2) (∅:(finset ℕ))))) → fin 2 := λ k, f k,
+let f' : (insert (5 * block₁.val) (insert (5 * block₁.val + 1) (insert (5 * block₁.val + 2) (∅:(finset ℕ))))) → fin 2 := λ k, f k,
 have fh' := fintype.exists_lt_card_fiber_of_mul_lt_card f' fin25,
 rcases fh' with ⟨c, chyp⟩,
-pick 2 from (finset.filter (λ (x : ↥{5 * a.val, 5 * a.val + 1, 5 * a.val + 2}), f' x = c) finset.univ),
+pick 2 from (finset.filter (λ (x : ↥{5 * block₁.val, 5 * block₁.val + 1, 5 * block₁.val + 2}), f' x = c) finset.univ) with a₁ a₂,
+simp at a₁.elem a₂.elem,
+sorry
+end
+
+noncomputable def vdW (k : ℕ) (r : ℕ) : ℕ := Inf { n : ℕ | vdW_prop n k r }
+
+theorem vdW3 : vdW 3 2 = 9 :=
+begin
+unfold vdW,
+have hs : ∀ (k₁ k₂ : ℕ), k₁ ≤ k₂ → k₁ ∈ {n : ℕ | vdW_prop n 3 2} → k₂ ∈ {n : ℕ | vdW_prop n 3 2},
+intros _ _ k₁leqk₂ k₁elem,
+simp at k₁elem ⊢,
+intro f,
+apply vdW_monotone k₁; assumption,
+rw (nat.Inf_upward_closed_eq_succ_iff hs 8),
+simp,
 sorry
 end
