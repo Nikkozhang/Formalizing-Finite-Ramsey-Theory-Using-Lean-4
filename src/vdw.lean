@@ -4,6 +4,7 @@ import data.bitvec.core
 import data.fin.basic
 import combinatorics.pigeonhole
 import data.nat.lattice
+import tactic.fin_cases
 
 import .pick_tactic
 
@@ -103,6 +104,33 @@ have fh' := fintype.exists_lt_card_fiber_of_mul_lt_card f' fin25,
 rcases fh' with ⟨c, chyp⟩,
 pick 2 from (finset.filter (λ (x : ↥{5 * block₁.val, 5 * block₁.val + 1, 5 * block₁.val + 2}), f' x = c) finset.univ) with a₁ a₂,
 simp at a₁.elem a₂.elem,
+let a₃ : ℕ := 2 * a₂.val - a₁.val,
+
+have a₁.color : f' a₁ = c, from and.right a₁.elem,
+have a₂.color : f' a₂ = c, from and.right a₂.elem,
+simp [f'] at a₁.color a₂.color,
+
+cases (fin.decidable_eq 2) (f a₃) (f a₁),
+admit, 
+rw a₁.color at h,
+use {start := a₁, diff := a₂ - a₁},
+simp,
+split,
+assumption,
+use c,
+
+
+fin_cases c,
+let c' := f a₃,
+fin_cases c',
+--have a₁.range : (a₁ = ⟨5 * ↑block₁, _⟩ ∨ a₁ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₁ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₁.elem,
+--have a₂.range :  (a₂ = ⟨5 * ↑block₁, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₂.elem,
+
+--repeat{cases a₂.range},
+--repeat{cases a₁.range},
+
+--assume(h : f a₃ = c), 
+
 sorry
 end
 
