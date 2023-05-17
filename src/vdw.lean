@@ -112,17 +112,103 @@ simp [f'] at a₁.color a₂.color,
 
 cases (fin.decidable_eq 2) (f a₃) (f a₁),
 admit, 
+
 rw a₁.color at h,
 use {start := a₁, diff := a₂ - a₁},
 simp,
 split,
+
 assumption,
 use c,
+intros,
+cases H with i ehyp,
+split,
+
+--fin_cases i,
+--simp at ehyp,
+--cases a₂.elem.left,
+--have test := block₁.property,
+have startbound : ↑a₁ < 170,
+have a₂bound : a₂.val < 5 * block₁.val + 5,
+have a₂.range :  (a₂ = ⟨5 * ↑block₁, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₂.elem,
+repeat{cases a₂.range},
+repeat{simp},
+have temp : 5 * block₁.val + 5 < 170 := by linarith [block₁.property],
+-- how to unfold x ∈ fin(N) → x < N
+transitivity a₂.val,
+apply a₁.lt.a₂,
+transitivity 5 * block₁.val + 5,
+apply a₂bound,
+apply temp,
 
 
-fin_cases c,
-let c' := f a₃,
-fin_cases c',
+
+
+have diffbound : ↑a₂ - ↑a₁ < 5,
+have a₁.range : (a₁ = ⟨5 * ↑block₁, _⟩ ∨ a₁ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₁ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₁.elem,
+have a₂.range :  (a₂ = ⟨5 * ↑block₁, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₂.elem,
+
+repeat{cases a₂.range},
+repeat{cases a₁.range},
+repeat{simp},
+
+
+
+--have a₃bound : 2 * a₂.val - a₁.val < 325,
+--have a₃bound : a₂.val + (a₂.val - a₁.val) < 325,
+
+
+--have a₃bound : ↑a₁ + (↑a₂ - ↑a₁ + (↑a₂ - ↑a₁)) < 325,
+--linarith,
+fin_cases i,
+
+simp at ehyp,
+rw ehyp,
+linarith,
+
+simp at ehyp,
+rw ehyp,
+linarith,
+
+simp at ehyp,
+rw ehyp,
+linarith,
+
+
+
+--repeat{simp at ehyp,rw ehyp,linarith},
+
+fin_cases i,
+simp at ehyp, 
+rw ehyp, 
+apply a₁.color,
+
+simp at ehyp, 
+rw ehyp,
+have getaround : a₂.val =  a₁.val + (a₂.val - a₁.val),
+simp,
+
+
+
+simp at ehyp, 
+rw ehyp, 
+apply h,
+
+--repeat{simp at ehyp, rw ehyp, try{apply a₁.color a₂.color h}},
+ 
+
+--have block₁.lt325 := 5 * block₁.val + 4 < 
+--have a₂.lt325 : a₂.val < 325,
+--let block₁.sup := 5 * block₁.val + 5,
+--transitivity block₁.sup,
+--simp,
+--fin_cases i,
+--simp at ehyp,
+
+
+--fin_cases c,
+--let c' := f a₃,
+--fin_cases c',
 --have a₁.range : (a₁ = ⟨5 * ↑block₁, _⟩ ∨ a₁ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₁ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₁.elem,
 --have a₂.range :  (a₂ = ⟨5 * ↑block₁, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₂.elem,
 
