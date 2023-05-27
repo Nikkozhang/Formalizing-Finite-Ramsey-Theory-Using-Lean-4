@@ -6,6 +6,9 @@ import combinatorics.pigeonhole
 import data.nat.lattice
 import tactic.fin_cases
 
+import data.nat.cast
+import data.nat.basic
+
 import .pick_tactic
 
 structure arithprog (α : Type) (length : ℕ) [has_add α] := (start : α) (diff : α)
@@ -110,8 +113,52 @@ have a₁.color : f' a₁ = c, from and.right a₁.elem,
 have a₂.color : f' a₂ = c, from and.right a₂.elem,
 simp [f'] at a₁.color a₂.color,
 
+/- have a₁.range : (a₁ = ⟨5 * ↑block₁, _⟩ ∨ a₁ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₁ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₁.elem,
+have a₂.range :  (a₂ = ⟨5 * ↑block₁, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₂.elem,
+
+repeat{cases a₂.range},
+repeat{cases a₁.range},
+repeat{simp at a₁.lt.a₂},
+repeat{by contradiction},
+
 cases (fin.decidable_eq 2) (f a₃) (f a₁),
-admit, 
+rw a₁.color at h,
+use {start := a₁, diff := a₂ - a₁},
+simp,
+split,
+
+assumption,
+use c,
+intros,
+cases H with i ehyp,
+split,
+ -/
+
+cases (fin.decidable_eq 2) (f a₃) (f a₁),
+admit,
+-- rw a₁.color at h,
+-- let block₃ := 2*block₂ - block₁,
+-- let a₃' : ℕ := a₃ - block₁,
+
+-- cases (fin.decidable_eq 2) (f (a₃'+block₃)) (f a₁),
+-- admit,
+
+-- let a₂' := a₂.val - block₁.val + block₂.val,
+-- have a₂.lt.a₂' : ↑a₂ < a₂',
+-- use a₂',
+-- linarith,
+
+-- use {start := a₁, diff := a₂' - a₁},
+-- simp,
+-- split,
+
+
+
+-- assumption,
+-- use c,
+-- intros,
+-- cases H with i ehyp,
+-- split,
 
 rw a₁.color at h,
 use {start := a₁, diff := a₂ - a₁},
@@ -175,7 +222,6 @@ rw ehyp,
 linarith,
 
 
-
 --repeat{simp at ehyp,rw ehyp,linarith},
 
 fin_cases i,
@@ -185,9 +231,13 @@ apply a₁.color,
 
 simp at ehyp, 
 rw ehyp,
-have getaround : a₂.val =  a₁.val + (a₂.val - a₁.val),
-simp,
 
+
+have a₁.le.a₂ : a₁ ≤ a₂ := le_of_lt a₁.lt.a₂,
+have a₁.cast_le.a₂ : ↑a₁ ≤ ↑a₂ := nat.cast_le (a₁.le.a₂),
+have getaround: ↑a₁ + (↑a₂ - ↑a₁) = ↑a₂ := nat.add_sub_of_le (a₁.cast_le.a₂),
+rw getaround,
+apply a₂.color,
 
 
 simp at ehyp, 
