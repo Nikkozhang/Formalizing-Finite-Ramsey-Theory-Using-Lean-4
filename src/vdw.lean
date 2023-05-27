@@ -107,7 +107,7 @@ have fh' := fintype.exists_lt_card_fiber_of_mul_lt_card f' fin25,
 rcases fh' with ⟨c, chyp⟩,
 pick 2 from (finset.filter (λ (x : ↥{5 * block₁.val, 5 * block₁.val + 1, 5 * block₁.val + 2}), f' x = c) finset.univ) with a₁ a₂,
 simp at a₁.elem a₂.elem,
-let a₃ : ℕ := 2 * a₂.val - a₁.val,
+let a₃ : ℕ := ↑a₁ + (↑a₂ - ↑a₁ + (↑a₂ - ↑a₁)),
 
 have a₁.color : f' a₁ = c, from and.right a₁.elem,
 have a₂.color : f' a₂ = c, from and.right a₂.elem,
@@ -135,10 +135,22 @@ split,
  -/
 
 cases (fin.decidable_eq 2) (f a₃) (f a₁),
-admit,
--- rw a₁.color at h,
--- let block₃ := 2*block₂ - block₁,
--- let a₃' : ℕ := a₃ - block₁,
+--admit,
+rw a₁.color at h,
+let block₃ := 2*block₂ - block₁,
+let a₃' : ℕ := a₃ - 5*block₁,
+let a.diff := ↑a₂ - ↑a₁,
+--let block.diff := ↑block₂- ↑block₁,
+have a.diff.pos : a.diff > 0 := nat.sub_pos_of_lt (a₁.lt.a₂),
+--have block.diff.pos : block.diff > 0  := nat.sub_pos_of_lt(block₁.lt.block₂),
+have diff.positive : a.diff + 5*(block₂- block₁) > 0,
+linarith,
+
+use {start := a₁, diff := (a₂ - a₁)+ 5*(block₂-block₁)},
+simp,
+split,
+apply nat.add_pos_iff_pos_or_pos,
+assumption,
 
 -- cases (fin.decidable_eq 2) (f (a₃'+block₃)) (f a₁),
 -- admit,
@@ -224,6 +236,17 @@ linarith,
 
 --repeat{simp at ehyp,rw ehyp,linarith},
 
+
+have a₁.le.a₂ : a₁ ≤ a₂ := le_of_lt a₁.lt.a₂,
+have a₁.cast_le.a₂ : ↑a₁ ≤ ↑a₂ := by assumption, -- why by assumtion work?
+have a₂.getaround: ↑a₁ + (↑a₂ - ↑a₁) = ↑a₂ := nat.add_sub_of_le (a₁.cast_le.a₂),
+/- 
+have a₃.getaround: ↑a₂ - ↑a₁ + (↑a₂ - ↑a₁) = ↑a₂ + (↑a₂ - ↑a₁) - ↑a₁:= nat.sub_add_comm (a₁.cast_le.a₂),
+{calc
+  ↑a₁ + (↑a₂ - ↑a₁ + (↑a₂ - ↑a₁)) = ↑a₁ + ((↑a₂ - ↑a₁) + (↑a₂ - ↑a₁)): nat.add_sub_assoc (a₁.cast_le.a₂)
+  ... = a₃ : sorry,
+},
+ -/
 fin_cases i,
 simp at ehyp, 
 rw ehyp, 
@@ -231,17 +254,13 @@ apply a₁.color,
 
 simp at ehyp, 
 rw ehyp,
-
-
-have a₁.le.a₂ : a₁ ≤ a₂ := le_of_lt a₁.lt.a₂,
-have a₁.cast_le.a₂ : ↑a₁ ≤ ↑a₂ := nat.cast_le (a₁.le.a₂),
-have getaround: ↑a₁ + (↑a₂ - ↑a₁) = ↑a₂ := nat.add_sub_of_le (a₁.cast_le.a₂),
-rw getaround,
+rw a₂.getaround,
 apply a₂.color,
 
 
 simp at ehyp, 
 rw ehyp, 
+
 apply h,
 
 --repeat{simp at ehyp, rw ehyp, try{apply a₁.color a₂.color h}},
