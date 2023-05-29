@@ -136,42 +136,8 @@ split,
 
 cases (fin.decidable_eq 2) (f a₃) (f a₁),
 --admit,
-rw a₁.color at h,
-let block₃ := 2*block₂ - block₁,
-let a₃' : ℕ := a₃ - 5*block₁,
-let a.diff := ↑a₂ - ↑a₁,
---let block.diff := ↑block₂- ↑block₁,
-have a.diff.pos : a.diff > 0 := nat.sub_pos_of_lt (a₁.lt.a₂),
---have block.diff.pos : block.diff > 0  := nat.sub_pos_of_lt(block₁.lt.block₂),
-have diff.positive : a.diff + 5*(block₂- block₁) > 0,
-linarith,
 
-use {start := a₁, diff := (a₂ - a₁)+ 5*(block₂-block₁)},
-simp,
-split,
-apply nat.add_pos_iff_pos_or_pos,
-assumption,
-
--- cases (fin.decidable_eq 2) (f (a₃'+block₃)) (f a₁),
--- admit,
-
--- let a₂' := a₂.val - block₁.val + block₂.val,
--- have a₂.lt.a₂' : ↑a₂ < a₂',
--- use a₂',
--- linarith,
-
--- use {start := a₁, diff := a₂' - a₁},
--- simp,
--- split,
-
-
-
--- assumption,
--- use c,
--- intros,
--- cases H with i ehyp,
--- split,
-
+rotate,
 rw a₁.color at h,
 use {start := a₁, diff := a₂ - a₁},
 simp,
@@ -192,7 +158,7 @@ have a₂bound : a₂.val < 5 * block₁.val + 5,
 have a₂.range :  (a₂ = ⟨5 * ↑block₁, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₂.elem,
 repeat{cases a₂.range},
 repeat{simp},
-have temp : 5 * block₁.val + 5 < 170 := by linarith [block₁.property],
+have temp : 5 * block₁.val + 5 < 170 := by linarith only [block₁.property],
 -- how to unfold x ∈ fin(N) → x < N
 transitivity a₂.val,
 apply a₁.lt.a₂,
@@ -223,21 +189,23 @@ fin_cases i,
 
 simp at ehyp,
 rw ehyp,
-linarith,
+transitivity 170,
+assumption,
+simp,
 
 simp at ehyp,
 rw ehyp,
-linarith,
+linarith only [startbound, diffbound],
 
 simp at ehyp,
 rw ehyp,
-linarith,
+linarith only [startbound, diffbound],
 
 
 --repeat{simp at ehyp,rw ehyp,linarith},
 
 
-have a₁.le.a₂ : a₁ ≤ a₂ := le_of_lt a₁.lt.a₂,
+have a₁.le.a₂ : a₁.val ≤ a₂.val := le_of_lt a₁.lt.a₂,
 have a₁.cast_le.a₂ : ↑a₁ ≤ ↑a₂ := by assumption, -- why by assumtion work?
 have a₂.getaround: ↑a₁ + (↑a₂ - ↑a₁) = ↑a₂ := nat.add_sub_of_le (a₁.cast_le.a₂),
 /- 
@@ -262,6 +230,87 @@ simp at ehyp,
 rw ehyp, 
 
 apply h,
+
+
+rw a₁.color at h,
+
+cases (fin.decidable_eq 2) (f (a₃ + 10*(block₂-block₁))) (f a₁),
+admit,
+
+-- let block₃ := 2*block₂ - block₁,
+-- let a₃' : ℕ := a₃ - 5*block₁,
+-- let a.diff := ↑a₂ - ↑a₁,
+-- let block.diff := ↑block₂- ↑block₁,
+-- have a.diff.pos : a.diff > 0 := nat.sub_pos_of_lt (a₁.lt.a₂),
+-- have block.diff.pos : block.diff > 0  := nat.sub_pos_of_lt(block₁.lt.block₂),
+-- have diff.positive : a.diff + 5*(block₂- block₁) > 0,
+-- linarith,
+
+use {start := a₁, diff := (a₂ - a₁)+ 5*(block₂-block₁)},
+simp,
+split,
+--apply nat.add_pos_iff_pos_or_pos, 
+--have b₁.lt.b₂: 5*block₁ < 5*block₂ := by linarith[block₁.lt.block₂],
+left,
+assumption,
+
+use c,
+intros,
+cases H with i ehyp,
+split,
+
+have a₂bound : a₂.val < 5 * block₁ + 5,
+have a₂.range :  (a₂ = ⟨5 * ↑block₁, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₂.elem,
+repeat{cases a₂.range},
+repeat{simp},
+
+have startbound : ↑a₁ < 170,
+have temp1 : 5 * block₁.val + 5 < 170 := by linarith only [block₁.property],
+-- how to unfold x ∈ fin(N) → x < N
+transitivity a₂.val,
+apply a₁.lt.a₂,
+transitivity 5 * block₁.val + 5,
+apply a₂bound,
+apply temp1, 
+
+have midbound : ↑a₁ + ↑a₂ - ↑a₁ - 5*block₁ + 5*block₂  < 325,
+simp, 
+have temp1 : 5 * block₂.val < 165 := by linarith only [block₂.property],
+
+have temp2 : ↑↑a₂ - 5*block₁ < 5 := sorry,
+linarith,
+
+
+-- transitivity a₂.val,
+-- apply a₁.lt.a₂,
+-- transitivity 5 * block₁.val + 5,
+-- apply a₂bound,
+-- apply temp,
+
+-- have diffbound.left : ↑a₂ - ↑a₁ < 5,
+-- have a₁.range : (a₁ = ⟨5 * ↑block₁, _⟩ ∨ a₁ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₁ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₁.elem,
+-- have a₂.range :  (a₂ = ⟨5 * ↑block₁, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₂.elem,
+
+-- repeat{cases a₂.range},
+-- repeat{cases a₁.range},
+-- repeat{simp},
+
+-- have diffbound.right : block₂ - block₁ < 33 := by linarith,
+-- fin_cases i,
+
+-- simp at ehyp,
+-- rw ehyp,
+-- linarith,
+
+-- simp at ehyp,
+-- rw ehyp,
+-- linarith,
+
+-- simp at ehyp,
+-- rw ehyp,
+-- linarith,
+
+
 
 --repeat{simp at ehyp, rw ehyp, try{apply a₁.color a₂.color h}},
  
