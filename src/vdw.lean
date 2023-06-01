@@ -264,6 +264,9 @@ have a₂.range :  (a₂ = ⟨5 * ↑block₁, _⟩ ∨ a₂ = ⟨5 * ↑block�
 repeat{cases a₂.range},
 repeat{simp},
 
+have b₂.bound: block₂.val < 33 := by linarith only [block₂.property],
+have b₂.cast_bound: ↑block₂ < 33 := by assumption,
+
 have startbound : ↑a₁ < 170,
 have temp1 : 5 * block₁.val + 5 < 170 := by linarith only [block₁.property],
 -- how to unfold x ∈ fin(N) → x < N
@@ -273,8 +276,13 @@ transitivity 5 * block₁.val + 5,
 apply a₂bound,
 apply temp1, 
 
-have midbound : ↑a₁ + ↑a₂ - ↑a₁ - 5*block₁ + 5*block₂  < 325,
-simp, 
+have midbound : ↑a₁ + ↑a₂ - ↑a₁ - 5*block₁.val + 5*block₂.val  < 325,
+have a₂.range :  (a₂ = ⟨5 * ↑block₁, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₂.elem,
+repeat{cases a₂.range},
+repeat{simp},
+repeat{linarith only [b₂.cast_bound]},
+
+
 have temp1 : 5 * block₂.val < 165 := by linarith only [block₂.property],
 
 have temp2 : ↑↑a₂ - 5*block₁ < 5 := sorry,
