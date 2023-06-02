@@ -266,11 +266,9 @@ rcases a₂.elem.left with rfl | rfl | rfl; simp,
 have b₁.cast_bound: ↑block₁ < 33 := by exact block₁.property,
 have b₂.cast_bound: ↑block₂ < 33 := by exact block₂.property,
 
-have startbound : ↑a₁ < 170,
-rcases a₁.elem.left with rfl | rfl | rfl; linarith only [b₁.cast_bound],
+have startbound : ↑a₁ < 170 := by rcases a₁.elem.left with rfl | rfl | rfl; simp; linarith only [b₁.cast_bound],
 
-have midbound : ↑a₁ + ↑a₂ - ↑a₁ - 5*block₁.val + 5*block₂.val  < 325,
-rcases a₂.elem.left with rfl | rfl | rfl; linarith only [b₂.cast_bound],
+have midbound : ↑a₁ + ↑a₂ - ↑a₁ - 5*block₁.val + 5*block₂.val  < 325 := by rcases a₂.elem.left with rfl | rfl | rfl; simp; linarith only [b₂.cast_bound],
 
 -- have temp1 : 5 * block₂.val < 165 := by linarith only [block₂.property],
 
