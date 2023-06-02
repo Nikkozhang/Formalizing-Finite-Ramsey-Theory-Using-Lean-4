@@ -203,11 +203,11 @@ linarith only [startbound, diffbound],
 
 
 --repeat{simp at ehyp,rw ehyp,linarith},
+have a₁.cast_le.a₂ : ↑a₁ ≤ ↑a₂,
+change a₁.val ≤ a₂.val,
+exact (le_of_lt a₁.lt.a₂),
 
-
-have a₁.le.a₂ : a₁.val ≤ a₂.val := le_of_lt a₁.lt.a₂,
-have a₁.cast_le.a₂ : ↑a₁ ≤ ↑a₂ := by assumption, -- why by assumtion work?
-have a₂.getaround: ↑a₁ + (↑a₂ - ↑a₁) = ↑a₂ := nat.add_sub_of_le (a₁.cast_le.a₂),
+-- have a₂.getaround: ↑a₁ + (↑a₂ - ↑a₁) = ↑a₂ := nat.add_sub_of_le (a₁.cast_le.a₂),
 /- 
 have a₃.getaround: ↑a₂ - ↑a₁ + (↑a₂ - ↑a₁) = ↑a₂ + (↑a₂ - ↑a₁) - ↑a₁:= nat.sub_add_comm (a₁.cast_le.a₂),
 {calc
@@ -222,7 +222,7 @@ apply a₁.color,
 
 simp at ehyp, 
 rw ehyp,
-rw a₂.getaround,
+rw nat.add_sub_of_le (a₁.cast_le.a₂),
 apply a₂.color,
 
 
@@ -260,33 +260,22 @@ cases H with i ehyp,
 split,
 
 have a₂bound : a₂.val < 5 * block₁ + 5,
-have a₂.range :  (a₂ = ⟨5 * ↑block₁, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₂.elem,
-repeat{cases a₂.range},
-repeat{simp},
+rcases a₂.elem.left with rfl | rfl | rfl; simp,
 
-have b₂.bound: block₂.val < 33 := by linarith only [block₂.property],
-have b₂.cast_bound: ↑block₂ < 33 := by assumption,
+
+have b₁.cast_bound: ↑block₁ < 33 := by exact block₁.property,
+have b₂.cast_bound: ↑block₂ < 33 := by exact block₂.property,
 
 have startbound : ↑a₁ < 170,
-have temp1 : 5 * block₁.val + 5 < 170 := by linarith only [block₁.property],
--- how to unfold x ∈ fin(N) → x < N
-transitivity a₂.val,
-apply a₁.lt.a₂,
-transitivity 5 * block₁.val + 5,
-apply a₂bound,
-apply temp1, 
+rcases a₁.elem.left with rfl | rfl | rfl; linarith only [b₁.cast_bound],
 
 have midbound : ↑a₁ + ↑a₂ - ↑a₁ - 5*block₁.val + 5*block₂.val  < 325,
-have a₂.range :  (a₂ = ⟨5 * ↑block₁, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₂.elem,
-repeat{cases a₂.range},
-repeat{simp},
-repeat{linarith only [b₂.cast_bound]},
+rcases a₂.elem.left with rfl | rfl | rfl; linarith only [b₂.cast_bound],
 
+-- have temp1 : 5 * block₂.val < 165 := by linarith only [block₂.property],
 
-have temp1 : 5 * block₂.val < 165 := by linarith only [block₂.property],
-
-have temp2 : ↑↑a₂ - 5*block₁ < 5 := sorry,
-linarith,
+-- have temp2 : ↑↑a₂ - 5*block₁ < 5 := sorry,
+-- linarith,
 
 
 -- transitivity a₂.val,
