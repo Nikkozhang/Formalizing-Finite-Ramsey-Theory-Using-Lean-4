@@ -138,6 +138,8 @@ cases (fin.decidable_eq 2) (f a₃) (f a₁),
 --admit,
 
 rotate,
+
+
 rw a₁.color at h,
 use {start := a₁, diff := a₂ - a₁},
 simp,
@@ -246,13 +248,14 @@ admit,
 -- have diff.positive : a.diff + 5*(block₂- block₁) > 0,
 -- linarith,
 
-use {start := a₁, diff := (a₂ - a₁)+ 5*(block₂-block₁)},
+use {start := a₁, diff := a₂ - 5*block₁ + 5*block₂ - a₁},
 simp,
 split,
 --apply nat.add_pos_iff_pos_or_pos, 
 --have b₁.lt.b₂: 5*block₁ < 5*block₂ := by linarith[block₁.lt.block₂],
-left,
-assumption,
+admit,
+-- left,
+-- assumption,
 
 use c,
 intros,
@@ -267,9 +270,26 @@ have b₁.cast_bound: ↑block₁ < 33 := by exact block₁.property,
 have b₂.cast_bound: ↑block₂ < 33 := by exact block₂.property,
 
 have startbound : ↑a₁ < 170 := by rcases a₁.elem.left with rfl | rfl | rfl; simp; linarith only [b₁.cast_bound],
+have temp : ↑a₁ ≤ 5*block₂.val := sorry,
+have midbound : ↑a₁ + (↑a₂ - 5*block₁.val + 5*block₂.val - ↑a₁) < 325 := by rcases a₂.elem.left with rfl | rfl | rfl; simp; 
+rw nat.add_sub_of_le (temp);
+linarith only [b₂.cast_bound],
+--have endbound : ↑a₁ + ↑a₂ - ↑a₁ - 5*block₁.val + 5*block₂.val + ↑a₂ - ↑a₁ - 5*block₁.val + 5*block₂.val < 325 := by rcases a₂.elem.left with rfl | rfl | rfl; simp; linarith only [b₂.cast_bound],
 
-have midbound : ↑a₁ + ↑a₂ - ↑a₁ - 5*block₁.val + 5*block₂.val  < 325 := by rcases a₂.elem.left with rfl | rfl | rfl; simp; linarith only [b₂.cast_bound],
+fin_cases i,
 
+simp at ehyp,
+rw ehyp,
+transitivity 170,
+assumption,
+simp,
+
+simp at ehyp,
+rw ehyp,
+apply midbound,
+
+-- simp at ehyp,
+-- rw ehyp,
 -- have temp1 : 5 * block₂.val < 165 := by linarith only [block₂.property],
 
 -- have temp2 : ↑↑a₂ - 5*block₁ < 5 := sorry,
@@ -291,11 +311,6 @@ have midbound : ↑a₁ + ↑a₂ - ↑a₁ - 5*block₁.val + 5*block₂.val  <
 -- repeat{simp},
 
 -- have diffbound.right : block₂ - block₁ < 33 := by linarith,
--- fin_cases i,
-
--- simp at ehyp,
--- rw ehyp,
--- linarith,
 
 -- simp at ehyp,
 -- rw ehyp,
