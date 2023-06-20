@@ -5,6 +5,7 @@ import data.fin.basic
 import combinatorics.pigeonhole
 import data.nat.lattice
 import tactic.fin_cases
+import tactic.interval_cases
 
 import data.nat.cast
 import data.nat.basic
@@ -269,6 +270,69 @@ have b₂.cast_bound: ↑block₂ < 33 := by exact block₂.property,
 have startbound : ↑a₁ < 170 := by rcases a₁.elem.left with rfl | rfl | rfl; simp; linarith only [b₁.cast_bound],
 
 have midbound : ↑a₁ + ↑a₂ - ↑a₁ - 5*block₁.val + 5*block₂.val  < 325 := by rcases a₂.elem.left with rfl | rfl | rfl; simp; linarith only [b₂.cast_bound],
+
+fin_cases i,
+
+simp at ehyp,
+rw ehyp,
+transitivity 170,
+assumption,
+simp,
+
+simp [ehyp],
+rw ← add_assoc ↑a₁ (↑a₂ - ↑a₁) (5 * (↑block₂ - ↑block₁)),
+have a₁.lt.a₂.cast_bound : ↑a₁ < ↑a₂ := by exact a₁.lt.a₂,
+rw (add_tsub_cancel_of_le (le_of_lt a₁.lt.a₂.cast_bound)),
+rw nat.mul_sub_left_distrib 5 _ _,
+have block₁.lt.block₂.cast_bound : ↑block₁ < ↑block₂ := by exact block₁.lt.block₂,
+rw ← nat.add_sub_assoc (nat.mul_le_mul_left 5 (le_of_lt block₁.lt.block₂.cast_bound)),
+rcases a₂.elem.left with rfl | rfl | rfl; simp,
+linarith only [b₂.cast_bound],
+simp [add_assoc (5 * ↑block₁) 1 (5 * ↑block₂)],
+linarith only [b₂.cast_bound],
+simp [add_assoc (5 * ↑block₁) 2 (5 * ↑block₂)],
+linarith only [b₂.cast_bound],
+
+simp [ehyp],
+have a₁.lt.a₂.cast_bound : ↑a₁ < ↑a₂ := by exact a₁.lt.a₂,
+have out₂ : ∃ i, (↑a₂ = 5 * ↑block₁ + i) ∧ (i < 3),
+rcases a₂.elem.left with rfl | rfl | rfl,
+use 0,
+simp,
+use 1,
+simp,
+use 2,
+simp,
+rcases out₂ with ⟨i₂, a₂eq, i₂ineq⟩,
+simp [a₂eq] at a₁.lt.a₂.cast_bound,
+have out₁ : ∃ i, (↑a₁ = 5 * ↑block₁ + i) ∧ (i < i₂),
+rcases a₁.elem.left with rfl | rfl | rfl,
+use 0,
+simp at a₁.lt.a₂.cast_bound ⊢,
+exact a₁.lt.a₂.cast_bound,
+use 1,
+simp at a₁.lt.a₂.cast_bound ⊢,
+exact a₁.lt.a₂.cast_bound,
+use 2,
+simp at a₁.lt.a₂.cast_bound ⊢,
+exact a₁.lt.a₂.cast_bound,
+rcases out₁ with ⟨i₁, a₁eq, i₁ineq⟩,
+simp [a₁eq, a₂eq, tsub_add_eq_tsub_tsub],
+let A := i₂ - i₁,
+let B : ℕ := ↑block₂ - ↑block₁,
+change 5 * ↑block₁ + i₁ + (A + 5 * B + (A + 5 * B)) < 325,
+have Abound : i₁ + A < 3,
+change i₁ + (i₂ - i₁) < 3,
+rw ← nat.add_sub_assoc (le_of_lt i₁ineq) i₁,
+simp,
+exact i₂ineq,
+have Bbound : ↑block₁ + B < 33,
+change ↑block₁ + (↑block₂ - ↑block₁) < 33,
+have block₁.lt.block₂.cast_bound : ↑block₁ < ↑block₂ := by exact block₁.lt.block₂,
+rw ← nat.add_sub_assoc (le_of_lt block₁.lt.block₂.cast_bound) block₁,
+simp,
+exact b₂.cast_bound,
+linarith only [Abound, Bbound, b₁.cast_bound, i₁ineq],
 
 -- have temp1 : 5 * block₂.val < 165 := by linarith only [block₂.property],
 
