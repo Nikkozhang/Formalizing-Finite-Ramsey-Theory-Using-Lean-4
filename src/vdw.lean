@@ -107,41 +107,59 @@ have fh' := fintype.exists_lt_card_fiber_of_mul_lt_card f' fin25,
 rcases fh' with ⟨c, chyp⟩,
 pick 2 from (finset.filter (λ (x : ↥{5 * block₁.val, 5 * block₁.val + 1, 5 * block₁.val + 2}), f' x = c) finset.univ) with a₁ a₂,
 simp at a₁.elem a₂.elem,
-let a₃ : ℕ := ↑a₁ + (↑a₂ - ↑a₁ + (↑a₂ - ↑a₁)),
+
+have a₁.lt.a₂.cast_bound : ↑a₁ < ↑a₂ := by exact a₁.lt.a₂,
+have out₂ : ∃ i, (↑a₂ = 5 * ↑block₁ + i) ∧ (i < 3),
+rcases a₂.elem.left with rfl | rfl | rfl,
+use 0,
+simp,
+use 1,
+simp,
+use 2,
+simp,
+rcases out₂ with ⟨i₂, a₂eq, i₂ineq⟩,
+simp [a₂eq] at a₁.lt.a₂.cast_bound,
+have out₁ : ∃ i, (↑a₁ = 5 * ↑block₁ + i) ∧ (i < i₂),
+rcases a₁.elem.left with rfl | rfl | rfl,
+use 0,
+simp at a₁.lt.a₂.cast_bound ⊢,
+exact a₁.lt.a₂.cast_bound,
+use 1,
+simp at a₁.lt.a₂.cast_bound ⊢,
+exact a₁.lt.a₂.cast_bound,
+use 2,
+simp at a₁.lt.a₂.cast_bound ⊢,
+exact a₁.lt.a₂.cast_bound,
+rcases out₁ with ⟨i₁, a₁eq, i₁ineq⟩,
+simp [a₁eq, a₂eq, tsub_add_eq_tsub_tsub],
+let I := i₂ - i₁,
+let B : ℕ := ↑block₂ - ↑block₁,
+have Abound : i₁ + I < 3,
+change i₁ + (i₂ - i₁) < 3,
+rw ← nat.add_sub_assoc (le_of_lt i₁ineq) i₁,
+simp,
+exact i₂ineq,
+have Bbound : ↑block₁ + B < 33,
+change ↑block₁ + (↑block₂ - ↑block₁) < 33,
+have block₁.lt.block₂.cast_bound : ↑block₁ < ↑block₂ := by exact block₁.lt.block₂,
+rw ← nat.add_sub_assoc (le_of_lt block₁.lt.block₂.cast_bound) block₁,
+simp,
+
+have b₂.cast_bound: ↑block₂ < 33 := by exact block₂.property,
+exact b₂.cast_bound,
+
+let a₃ : ℕ := ↑a₁ + (I + I),
 
 have a₁.color : f' a₁ = c, from and.right a₁.elem,
 have a₂.color : f' a₂ = c, from and.right a₂.elem,
 simp [f'] at a₁.color a₂.color,
 
-/- have a₁.range : (a₁ = ⟨5 * ↑block₁, _⟩ ∨ a₁ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₁ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₁.elem,
-have a₂.range :  (a₂ = ⟨5 * ↑block₁, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₂.elem,
-
-repeat{cases a₂.range},
-repeat{cases a₁.range},
-repeat{simp at a₁.lt.a₂},
-repeat{by contradiction},
-
 cases (fin.decidable_eq 2) (f a₃) (f a₁),
-rw a₁.color at h,
-use {start := a₁, diff := a₂ - a₁},
-simp,
-split,
-
-assumption,
-use c,
-intros,
-cases H with i ehyp,
-split,
- -/
-
-cases (fin.decidable_eq 2) (f a₃) (f a₁),
---admit,
-
 rotate,
 
-
+-- Case I
 rw a₁.color at h,
-use {start := a₁, diff := a₂ - a₁},
+use {start := a₁, diff := I},
 simp,
 split,
 
@@ -151,200 +169,72 @@ intros,
 cases H with i ehyp,
 split,
 
---fin_cases i,
---simp at ehyp,
---cases a₂.elem.left,
---have test := block₁.property,
-have startbound : ↑a₁ < 170,
-have a₂bound : a₂.val < 5 * block₁.val + 5,
-have a₂.range :  (a₂ = ⟨5 * ↑block₁, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₂.elem,
-repeat{cases a₂.range},
-repeat{simp},
-have temp : 5 * block₁.val + 5 < 170 := by linarith only [block₁.property],
--- how to unfold x ∈ fin(N) → x < N
-transitivity a₂.val,
-apply a₁.lt.a₂,
-transitivity 5 * block₁.val + 5,
-apply a₂bound,
-apply temp,
+--Prove a₁ a₂ a₃ < 325
+fin_cases i,
+repeat{simp at ehyp,rw ehyp,linarith},
 
-
-
-
-have diffbound : ↑a₂ - ↑a₁ < 5,
-have a₁.range : (a₁ = ⟨5 * ↑block₁, _⟩ ∨ a₁ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₁ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₁.elem,
-have a₂.range :  (a₂ = ⟨5 * ↑block₁, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₂.elem,
-
-repeat{cases a₂.range},
-repeat{cases a₁.range},
-repeat{simp},
-
-
-
---have a₃bound : 2 * a₂.val - a₁.val < 325,
---have a₃bound : a₂.val + (a₂.val - a₁.val) < 325,
-
-
---have a₃bound : ↑a₁ + (↑a₂ - ↑a₁ + (↑a₂ - ↑a₁)) < 325,
---linarith,
+-- Prove a₁ a₂ a₃ have same color
 fin_cases i,
 
-simp at ehyp,
-rw ehyp,
-transitivity 170,
-assumption,
-simp,
-
-simp at ehyp,
-rw ehyp,
-linarith only [startbound, diffbound],
-
-simp at ehyp,
-rw ehyp,
-linarith only [startbound, diffbound],
-
-
---repeat{simp at ehyp,rw ehyp,linarith},
-have a₁.cast_le.a₂ : ↑a₁ ≤ ↑a₂,
-change a₁.val ≤ a₂.val,
-exact (le_of_lt a₁.lt.a₂),
-
--- have a₂.getaround: ↑a₁ + (↑a₂ - ↑a₁) = ↑a₂ := nat.add_sub_of_le (a₁.cast_le.a₂),
-/- 
-have a₃.getaround: ↑a₂ - ↑a₁ + (↑a₂ - ↑a₁) = ↑a₂ + (↑a₂ - ↑a₁) - ↑a₁:= nat.sub_add_comm (a₁.cast_le.a₂),
-{calc
-  ↑a₁ + (↑a₂ - ↑a₁ + (↑a₂ - ↑a₁)) = ↑a₁ + ((↑a₂ - ↑a₁) + (↑a₂ - ↑a₁)): nat.add_sub_assoc (a₁.cast_le.a₂)
-  ... = a₃ : sorry,
-},
- -/
-fin_cases i,
 simp at ehyp, 
 rw ehyp, 
 apply a₁.color,
 
+--f(a₂) = e
 simp at ehyp, 
 rw ehyp,
-rw nat.add_sub_of_le (a₁.cast_le.a₂),
+
+have temp: ↑a₁ + I = ↑a₂,
+change ↑a₁ + (i₂ - i₁) = ↑a₂,
+rw a₁eq,
+rw add_assoc (5*↑block₁) i₁ (i₂-i₁),
+rw (add_tsub_cancel_of_le (le_of_lt i₁ineq)),
+rw ← a₂eq,
+
+rw temp,
 apply a₂.color,
 
-
+-- f(a₃) = e
 simp at ehyp, 
 rw ehyp, 
-
 apply h,
-
-
 rw a₁.color at h,
+
 
 cases (fin.decidable_eq 2) (f (a₃ + 10*(block₂-block₁))) (f a₁),
 admit,
 
--- let block₃ := 2*block₂ - block₁,
--- let a₃' : ℕ := a₃ - 5*block₁,
--- let a.diff := ↑a₂ - ↑a₁,
--- let block.diff := ↑block₂- ↑block₁,
--- have a.diff.pos : a.diff > 0 := nat.sub_pos_of_lt (a₁.lt.a₂),
--- have block.diff.pos : block.diff > 0  := nat.sub_pos_of_lt(block₁.lt.block₂),
--- have diff.positive : a.diff + 5*(block₂- block₁) > 0,
--- linarith,
-
-use {start := a₁, diff := a₂ - 5*block₁ + 5*block₂ - a₁},
+--Case II
+use {start := a₁, diff := I + 5*B},
 simp,
 split,
---apply nat.add_pos_iff_pos_or_pos, 
---have b₁.lt.b₂: 5*block₁ < 5*block₂ := by linarith[block₁.lt.block₂],
-admit,
--- left,
--- assumption,
+
+left,
+assumption,
 
 use c,
 intros,
 cases H with i ehyp,
 split,
 
-have a₂bound : a₂.val < 5 * block₁ + 5,
-rcases a₂.elem.left with rfl | rfl | rfl; simp,
-
-
 have b₁.cast_bound: ↑block₁ < 33 := by exact block₁.property,
-have b₂.cast_bound: ↑block₂ < 33 := by exact block₂.property,
-
-have startbound : ↑a₁ < 170 := by rcases a₁.elem.left with rfl | rfl | rfl; simp; linarith only [b₁.cast_bound],
-have temp : ↑a₁ ≤ 5*block₂.val := sorry,
-have midbound : ↑a₁ + (↑a₂ - 5*block₁.val + 5*block₂.val - ↑a₁) < 325 := by rcases a₂.elem.left with rfl | rfl | rfl; simp; 
-rw nat.add_sub_of_le (temp);
-linarith only [b₂.cast_bound],
---have endbound : ↑a₁ + ↑a₂ - ↑a₁ - 5*block₁.val + 5*block₂.val + ↑a₂ - ↑a₁ - 5*block₁.val + 5*block₂.val < 325 := by rcases a₂.elem.left with rfl | rfl | rfl; simp; linarith only [b₂.cast_bound],
 
 fin_cases i,
 
 simp at ehyp,
 rw ehyp,
 transitivity 170,
-assumption,
+rcases a₁.elem.left with rfl | rfl | rfl; simp; linarith only [b₁.cast_bound],
 simp,
 
 simp at ehyp,
 rw ehyp,
-apply midbound,
+linarith,
 
--- simp at ehyp,
--- rw ehyp,
--- have temp1 : 5 * block₂.val < 165 := by linarith only [block₂.property],
-
--- have temp2 : ↑↑a₂ - 5*block₁ < 5 := sorry,
--- linarith,
-
-
--- transitivity a₂.val,
--- apply a₁.lt.a₂,
--- transitivity 5 * block₁.val + 5,
--- apply a₂bound,
--- apply temp,
-
--- have diffbound.left : ↑a₂ - ↑a₁ < 5,
--- have a₁.range : (a₁ = ⟨5 * ↑block₁, _⟩ ∨ a₁ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₁ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₁.elem,
--- have a₂.range :  (a₂ = ⟨5 * ↑block₁, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₂.elem,
-
--- repeat{cases a₂.range},
--- repeat{cases a₁.range},
--- repeat{simp},
-
--- have diffbound.right : block₂ - block₁ < 33 := by linarith,
-
--- simp at ehyp,
--- rw ehyp,
--- linarith,
-
--- simp at ehyp,
--- rw ehyp,
--- linarith,
-
-
-
---repeat{simp at ehyp, rw ehyp, try{apply a₁.color a₂.color h}},
- 
-
---have block₁.lt325 := 5 * block₁.val + 4 < 
---have a₂.lt325 : a₂.val < 325,
---let block₁.sup := 5 * block₁.val + 5,
---transitivity block₁.sup,
---simp,
---fin_cases i,
---simp at ehyp,
-
-
---fin_cases c,
---let c' := f a₃,
---fin_cases c',
---have a₁.range : (a₁ = ⟨5 * ↑block₁, _⟩ ∨ a₁ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₁ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₁.elem,
---have a₂.range :  (a₂ = ⟨5 * ↑block₁, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 1, _⟩ ∨ a₂ = ⟨5 * ↑block₁ + 2, _⟩), from and.left a₂.elem,
-
---repeat{cases a₂.range},
---repeat{cases a₁.range},
-
---assume(h : f a₃ = c), 
-
+simp at ehyp,
+rw ehyp,
+rw a₁eq,
+linarith only [Abound, Bbound, b₁.cast_bound, i₁ineq],
 sorry
 end
 
