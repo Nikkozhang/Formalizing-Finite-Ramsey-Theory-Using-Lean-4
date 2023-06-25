@@ -175,12 +175,12 @@ repeat{simp at ehyp,rw ehyp,linarith},
 
 -- Prove a₁ a₂ a₃ have same color
 fin_cases i,
-
+--f(a₁) = c
 simp at ehyp, 
 rw ehyp, 
 apply a₁.color,
 
---f(a₂) = e
+--f(a₂) = c
 simp at ehyp, 
 rw ehyp,
 
@@ -194,16 +194,15 @@ rw ← a₂eq,
 rw temp,
 apply a₂.color,
 
--- f(a₃) = e
+-- f(a₃) = c
 simp at ehyp, 
 rw ehyp, 
 apply h,
 rw a₁.color at h,
 
 
-cases (fin.decidable_eq 2) (f (a₃ + 10*(block₂-block₁))) (f a₁),
-admit,
-
+cases (fin.decidable_eq 2) (f (↑a₁ + (I + 5 * B + (I + 5 * B)))) (f a₁),
+rotate,
 --Case II
 use {start := a₁, diff := I + 5*B},
 simp,
@@ -235,7 +234,42 @@ simp at ehyp,
 rw ehyp,
 rw a₁eq,
 linarith only [Abound, Bbound, b₁.cast_bound, i₁ineq],
-sorry
+
+fin_cases i,
+
+simp at ehyp, 
+rw ehyp, 
+apply a₁.color,
+
+admit,
+
+simp at ehyp, 
+rw ehyp, 
+rw a₁.color at h_1,
+apply h_1,
+
+--Case III
+use {start := a₃, diff := 5*B},
+simp,
+split,
+
+assumption,
+
+use c,
+intros,
+cases H with i ehyp,
+split,
+
+fin_cases i,
+repeat{simp at ehyp,rw ehyp,linarith},
+
+fin_cases i,
+
+simp at ehyp, 
+rw ehyp, 
+
+
+
 end
 
 noncomputable def vdW (k : ℕ) (r : ℕ) : ℕ := Inf { n : ℕ | vdW_prop n k r }
