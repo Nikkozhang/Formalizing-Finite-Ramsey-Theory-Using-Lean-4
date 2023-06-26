@@ -157,7 +157,7 @@ simp [f'] at a₁.color a₂.color,
 cases (fin.decidable_eq 2) (f a₃) (f a₁),
 rotate,
 
--- Case I
+-- Case I: 5block₁ + i₁, 5block₁ + i₂, 5block₁ + i₃
 rw a₁.color at h,
 use {start := a₁, diff := I},
 simp,
@@ -200,10 +200,37 @@ rw ehyp,
 apply h,
 rw a₁.color at h,
 
+have notc : ∀ x y : ℕ, f x ≠ c → f y ≠ c → f x = f y,
+intros x y h₁ h₂,
+let c₁ := f x, 
+let c₂ := f y,
+change c₁ ≠ c at h₁,
+change c₂ ≠ c at h₂,
+change c₁ = c₂,
+
+fin_cases c,
+
+fin_cases c₁ using h_1,
+fin_cases c₂ using h_2,
+contradiction,
+contradiction,
+fin_cases c₂ using h_2,
+contradiction,
+rw [h_1, h_2],
+
+fin_cases c₁ using h_1,
+fin_cases c₂ using h_2,
+rw [h_1, h_2],
+contradiction,
+fin_cases c₂ using h_2,
+contradiction,
+contradiction,
+
+
 
 cases (fin.decidable_eq 2) (f (↑a₁ + (I + 5 * B + (I + 5 * B)))) (f a₁),
 rotate,
---Case II
+--Case II: 5block₁ + i₁, 5block₂ + i₂, 5block₃ + i₃
 use {start := a₁, diff := I + 5*B},
 simp,
 split,
@@ -217,7 +244,7 @@ cases H with i ehyp,
 split,
 
 have b₁.cast_bound: ↑block₁ < 33 := by exact block₁.property,
-
+--prove <325
 fin_cases i,
 
 simp at ehyp,
@@ -234,7 +261,7 @@ simp at ehyp,
 rw ehyp,
 rw a₁eq,
 linarith only [Abound, Bbound, b₁.cast_bound, i₁ineq],
-
+--prove color = c
 fin_cases i,
 
 simp at ehyp, 
@@ -248,22 +275,25 @@ rw ehyp,
 rw a₁.color at h_1,
 apply h_1,
 
---Case III
+--Case III:  5block₁ + i₃, 5block₂ + i₃, 5block₃ + i₃
 use {start := a₃, diff := 5*B},
 simp,
 split,
 
 assumption,
 
-use c,
+use f(a₃),
 intros,
 cases H with i ehyp,
 split,
-
+--prove < 325
 fin_cases i,
 repeat{simp at ehyp,rw ehyp,linarith},
-
+--prove color ≠ c
 fin_cases i,
+
+simp at ehyp, 
+tauto,
 
 simp at ehyp, 
 rw ehyp, 
