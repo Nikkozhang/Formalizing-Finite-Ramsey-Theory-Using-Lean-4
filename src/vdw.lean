@@ -150,15 +150,10 @@ exact b₂.cast_bound,
 
 let a₃ : ℕ := ↑a₁ + (I + I),
 
-have a₁.color : f' a₁ = c, from and.right a₁.elem,
-have a₂.color : f' a₂ = c, from and.right a₂.elem,
-simp [f'] at a₁.color a₂.color,
-
 cases (fin.decidable_eq 2) (f a₃) (f a₁),
 rotate,
 
 -- Case I: 5block₁ + i₁, 5block₁ + i₂, 5block₁ + i₃
-rw a₁.color at h,
 use {start := a₁, diff := I},
 simp,
 split,
@@ -176,7 +171,7 @@ fin_cases i; simp [ehyp]; linarith,
 fin_cases i,
 --f(a₁) = c
 simp [ehyp], 
-apply a₁.color,
+exact a₁.elem.right,
 
 --f(a₂) = c
 simp [ehyp],
@@ -189,12 +184,11 @@ rw (add_tsub_cancel_of_le (le_of_lt i₁ineq)),
 rw ← a₂eq,
 
 rw temp,
-apply a₂.color,
+exact a₂.elem.right,
 
 -- f(a₃) = c
-simp [ehyp], 
-apply h,
-rw a₁.color at h,
+simp [← a₃, ehyp, h],
+exact a₁.elem.right,
 
 have notc : ∀ x y : ℕ, f x ≠ c → f y ≠ c → f x = f y,
 intros x y h₁ h₂,
@@ -251,12 +245,12 @@ linarith only [Abound, Bbound, b₁.cast_bound, i₁ineq],
 fin_cases i,
 
 simp [ehyp], 
-apply a₁.color,
+exact a₁.elem.right,
 
 admit,
 
-simp [ehyp, a₁.color] at h_1 ⊢,
-apply h_1,
+simp [ehyp, h_1],
+exact a₁.elem.right,
 
 --Case III:  5block₁ + i₃, 5block₂ + i₃, 5block₃ + i₃
 use {start := a₃, diff := 5*B},
