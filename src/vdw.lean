@@ -170,19 +170,16 @@ cases H with i ehyp,
 split,
 
 --Prove a₁ a₂ a₃ < 325
-fin_cases i,
-repeat{simp at ehyp,rw ehyp,linarith},
+fin_cases i; simp [ehyp]; linarith,
 
 -- Prove a₁ a₂ a₃ have same color
 fin_cases i,
 --f(a₁) = c
-simp at ehyp, 
-rw ehyp, 
+simp [ehyp], 
 apply a₁.color,
 
 --f(a₂) = c
-simp at ehyp, 
-rw ehyp,
+simp [ehyp],
 
 have temp: ↑a₁ + I = ↑a₂,
 change ↑a₁ + (i₂ - i₁) = ↑a₂,
@@ -195,8 +192,7 @@ rw temp,
 apply a₂.color,
 
 -- f(a₃) = c
-simp at ehyp, 
-rw ehyp, 
+simp [ehyp], 
 apply h,
 rw a₁.color at h,
 
@@ -241,32 +237,25 @@ have b₁.cast_bound: ↑block₁ < 33 := by exact block₁.property,
 --prove <325
 fin_cases i,
 
-simp at ehyp,
-rw ehyp,
+simp [ehyp],
 transitivity 170,
 rcases a₁.elem.left with rfl | rfl | rfl; simp; linarith only [b₁.cast_bound],
 simp,
 
-simp at ehyp,
-rw ehyp,
+simp [ehyp],
 linarith,
 
-simp at ehyp,
-rw ehyp,
-rw a₁eq,
+simp [ehyp, a₁eq],
 linarith only [Abound, Bbound, b₁.cast_bound, i₁ineq],
 --prove color = c
 fin_cases i,
 
-simp at ehyp, 
-rw ehyp, 
+simp [ehyp], 
 apply a₁.color,
 
 admit,
 
-simp at ehyp, 
-rw ehyp, 
-rw a₁.color at h_1,
+simp [ehyp, a₁.color] at h_1 ⊢,
 apply h_1,
 
 --Case III:  5block₁ + i₃, 5block₂ + i₃, 5block₃ + i₃
@@ -281,18 +270,14 @@ intros,
 cases H with i ehyp,
 split,
 --prove < 325
-fin_cases i,
-repeat{simp at ehyp,rw ehyp,linarith},
+fin_cases i; simp [ehyp]; linarith,
 --prove color ≠ c
 fin_cases i,
 
 simp at ehyp, 
 tauto,
 
-simp at ehyp, 
-rw ehyp, 
-
-
+simp [ehyp],
 
 end
 
