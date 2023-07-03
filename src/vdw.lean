@@ -169,7 +169,7 @@ rcases out₁ with ⟨i₁, a₁eq, i₁ineq⟩,
 simp [a₁eq, a₂eq, tsub_add_eq_tsub_tsub],
 let I := i₂ - i₁,
 let B : ℕ := ↑block₂ - ↑block₁,
-have Abound : i₁ + I < 3,
+have Ibound : i₁ + I < 3,
 change i₁ + (i₂ - i₁) < 3,
 rw ← nat.add_sub_assoc (le_of_lt i₁ineq) i₁,
 simp,
@@ -253,7 +253,7 @@ simp [ehyp],
 linarith,
 
 simp [ehyp, a₁eq],
-linarith only [Abound, Bbound, b₁.cast_bound, i₁ineq],
+linarith only [Ibound, Bbound, b₁.cast_bound, i₁ineq],
 --prove color = c
 fin_cases i,
 
