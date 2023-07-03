@@ -100,6 +100,27 @@ have ghyp := fintype.exists_lt_card_fiber_of_mul_lt_card g fin533,
 rcases ghyp with ⟨y₅, y₅hyp⟩,
 pick 2 from (finset.filter (λ (x : fin 33), g x = y₅) finset.univ) with block₁ block₂,
 simp at block₁.elem block₂.elem,
+
+have notc : ∀ {c : fin 2}, ∀ {x y : ℕ}, f x ≠ c → f y ≠ c → f x = f y,
+intros c x y h₁ h₂,
+let c₁ := f x, 
+let c₂ := f y,
+change c₁ = c₂,
+
+fin_cases c,
+
+fin_cases c₁ using h_1,
+contradiction,
+fin_cases c₂ using h_2,
+contradiction,
+rw [h_1, h_2],
+
+fin_cases c₁ using h_1,
+fin_cases c₂ using h_2,
+rw [h_1, h_2],
+contradiction,
+contradiction,
+
 let targetfinset := (insert (5 * block₁.val) (insert (5 * block₁.val + 1) (insert (5 * block₁.val + 2) (∅:(finset ℕ))))),
 have fin25 : fintype.card (fin 2) • 1 <  fintype.card ↥targetfinset := by simp,
 let f' : (insert (5 * block₁.val) (insert (5 * block₁.val + 1) (insert (5 * block₁.val + 2) (∅:(finset ℕ))))) → fin 2 := λ k, f k,
@@ -189,28 +210,6 @@ exact a₂.elem.right,
 -- f(a₃) = c
 simp [← a₃, ehyp, h],
 exact a₁.elem.right,
-
-have notc : ∀ x y : ℕ, f x ≠ c → f y ≠ c → f x = f y,
-intros x y h₁ h₂,
-let c₁ := f x, 
-let c₂ := f y,
-change c₁ = c₂,
-
-fin_cases c,
-
-fin_cases c₁ using h_1,
-contradiction,
-fin_cases c₂ using h_2,
-contradiction,
-rw [h_1, h_2],
-
-fin_cases c₁ using h_1,
-fin_cases c₂ using h_2,
-rw [h_1, h_2],
-contradiction,
-contradiction,
-
-
 
 cases (fin.decidable_eq 2) (f (↑a₁ + (I + 5 * B + (I + 5 * B)))) (f a₁),
 rotate,
