@@ -143,6 +143,8 @@ fin_cases i; {
 
 clear fin533 y₅hyp block₂.elem block₁.elem y₅,
 
+have block₁.lt.block₂.cast_bound : ↑block₁ < ↑block₂ := by exact block₁.lt.block₂,
+
 -- let targetfinset be the first three element in block1
 let targetfinset := (insert (5 * block₁.val) (insert (5 * block₁.val + 1) (insert (5 * block₁.val + 2) (∅:(finset ℕ))))),
 -- at least two elememts have the same color
@@ -198,7 +200,6 @@ exact i₂ineq,
 
 have Bbound : ↑block₁ + B < 33,
 change ↑block₁ + (↑block₂ - ↑block₁) < 33,
-have block₁.lt.block₂.cast_bound : ↑block₁ < ↑block₂ := by exact block₁.lt.block₂,
 rw ← nat.add_sub_assoc (le_of_lt block₁.lt.block₂.cast_bound) block₁,
 simp,
 have b₂.cast_bound: ↑block₂ < 33 := by exact block₂.property,
@@ -303,17 +304,14 @@ rw ← a₂eq,
 rw a₁plusI,
 change ↑a₂ + 5*(↑block₂ - ↑block₁) = 5*↑block₂ + i₂,
 rw (nat.mul_sub_left_distrib (5) (↑block₂) (↑block₁)),
-have h₀:↑block₁ < ↑block₂ := by exact block₁.lt.block₂,
-have h₁:5 * ↑block₁ ≤ 5 * ↑block₂ := by linarith only [h₀],
-have h₂:5 * ↑block₁ ≤ ↑a₂ := by linarith only[a₂eq],
-rw ← (nat.add_sub_assoc (h₁)),
+have h₂:5 * ↑block₁ ≤ ↑a₂ := by simp [a₂eq],
+rw ← (nat.add_sub_assoc (nat.mul_le_mul_left 5 (le_of_lt block₁.lt.block₂.cast_bound))),
 rw (nat.sub_add_comm (h₂)),
-rw a₂eq,
-rw ( add_tsub_cancel_left (5*↑block₁) (i₂)),
+simp [a₂eq],
 apply add_comm,
 
 rw temp,
-have i₂lt5 : i₂ < 5 := by linarith,
+have i₂lt5 : i₂ < 5 := by transitivity 3; simp [i₂ineq],
 have beqi₂ := (blockeq (fin.mk (i₂) i₂lt5)),
 simp at beqi₂,
 rw ← beqi₂,
