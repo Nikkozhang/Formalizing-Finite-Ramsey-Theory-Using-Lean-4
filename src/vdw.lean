@@ -105,6 +105,7 @@ rcases ghyp with ⟨y₅, y₅hyp⟩,
 pick 2 from (finset.filter (λ (x : fin 33), g x = y₅) finset.univ) with block₁ block₂,
 simp at block₁.elem block₂.elem,
 
+
 have notc : ∀ {c : fin 2}, ∀ {x y : ℕ}, f x ≠ c → f y ≠ c → f x = f y,
 intros c x y h₁ h₂,
 let c₁ := f x, 
@@ -231,14 +232,21 @@ exact a₁.elem.right,
 --f(a₂) = c
 simp [ehyp],
 
-have temp: ↑a₁ + I = ↑a₂,
+-- have temp: ↑a₁ + I = ↑a₂,
+-- change ↑a₁ + (i₂ - i₁) = ↑a₂,
+-- rw a₁eq,
+-- rw add_assoc (5*↑block₁) i₁ (i₂-i₁),
+-- rw (add_tsub_cancel_of_le (le_of_lt i₁ineq)),
+-- rw ← a₂eq,
+
+have a₁plusI: ↑a₁ + I = ↑a₂,
 change ↑a₁ + (i₂ - i₁) = ↑a₂,
 rw a₁eq,
 rw add_assoc (5*↑block₁) i₁ (i₂-i₁),
 rw (add_tsub_cancel_of_le (le_of_lt i₁ineq)),
 rw ← a₂eq,
 
-rw temp,
+rw a₁plusI,
 exact a₂.elem.right,
 
 -- f(a₃) = c
@@ -281,7 +289,36 @@ fin_cases i,
 simp [ehyp], 
 exact a₁.elem.right,
 
-admit,
+simp [ehyp],
+have temp: ↑a₁ + (I + 5 * B) = 5*block₂ + i₂,
+rw ← add_assoc (↑a₁) I (5*B),
+
+have a₁plusI: ↑a₁ + I = ↑a₂,
+change ↑a₁ + (i₂ - i₁) = ↑a₂,
+rw a₁eq,
+rw add_assoc (5*↑block₁) i₁ (i₂-i₁),
+rw (add_tsub_cancel_of_le (le_of_lt i₁ineq)),
+rw ← a₂eq,
+
+rw a₁plusI,
+change ↑a₂ + 5*(↑block₂ - ↑block₁) = 5*↑block₂ + i₂,
+rw (nat.mul_sub_left_distrib (5) (↑block₂) (↑block₁)),
+have h₀:↑block₁ < ↑block₂ := by exact block₁.lt.block₂,
+have h₁:5 * ↑block₁ ≤ 5 * ↑block₂ := by linarith only [h₀],
+have h₂:5 * ↑block₁ ≤ ↑a₂ := by linarith only[a₂eq],
+rw ← (nat.add_sub_assoc (h₁)),
+rw (nat.sub_add_comm (h₂)),
+rw a₂eq,
+rw ( add_tsub_cancel_left (5*↑block₁) (i₂)),
+apply add_comm,
+
+rw temp,
+have i₂lt5 : i₂ < 5 := by linarith,
+have beqi₂ := (blockeq (fin.mk (i₂) i₂lt5)),
+simp at beqi₂,
+rw ← beqi₂,
+rw ← a₂eq,
+exact a₂.elem.right,
 
 simp [ehyp, h_1],
 exact a₁.elem.right,
@@ -306,7 +343,44 @@ simp at ehyp,
 tauto,
 
 simp [ehyp],
+have a₃eq : a₃ = a₁ + (I + I) := by tauto,
 
+have temp : a₃ + 5 * B = 5 * ↑block₂ + (i₁ + (I + I)), 
+change a₃ + 5*(↑block₂ - ↑block₁)  = 5 * ↑block₂ + (i₁ + (I + I)), 
+rw (nat.mul_sub_left_distrib (5) (↑block₂) (↑block₁)),
+have h₀:↑block₁ < ↑block₂ := by exact block₁.lt.block₂,
+have h₁:5 * ↑block₁ ≤ 5 * ↑block₂ := by linarith only [h₀],
+have h₂:5 * ↑block₁ ≤ a₃ := by linarith only[a₁eq,a₃eq],
+rw ← (nat.add_sub_assoc (h₁)),
+rw (nat.sub_add_comm (h₂)),
+rw a₃eq,
+rw a₁eq,
+rw add_assoc (5 * ↑block₁) (i₁) (I + I),
+rw ( add_tsub_cancel_left (5*↑block₁) (i₁ + (I + I))),
+rw add_comm (i₁ + (I + I)) (5*↑block₂),
+
+
+have test : i₁ + (I + I) < 5 := by linarith,
+have beqiII := (blockeq (fin.mk (i₁ + (I + I)) test)),
+simp at beqiII,
+
+rw temp,
+rw ← beqiII,
+
+have temp1 : 5 * ↑block₁ + (i₁ + (I + I)) = a₃ := by linarith,
+rw temp1,
+
+
+simp [ehyp],
+have temp : a₃ + (5 * B + 5 * B) = ↑a₁ + (I + 5 * B + (I + 5 * B)),
+change ↑a₁ + (I + I) + (5 * B + 5 * B) = ↑a₁ + (I + 5 * B + (I + 5 * B)),
+linarith,
+--rw nat.add_assoc (↑a₁) (I + I) (5 * B + 5 * B),
+--rw ← nat.add_assoc (I + I) (5 * B) (5 * B),
+--rw add_comm (I) (5 * B),
+rw temp,
+have temp₁: f(a₃) = f(↑a₁ + (I + 5*B + (I + 5*B))) := by exact notc h h_1,
+rw ← temp₁,
 end
 
 noncomputable def vdW (k : ℕ) (r : ℕ) : ℕ := Inf { n : ℕ | vdW_prop n k r }
