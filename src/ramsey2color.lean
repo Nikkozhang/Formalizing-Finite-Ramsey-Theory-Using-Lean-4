@@ -27,7 +27,7 @@ def Ramsey_prop (N s t : ℕ) : Prop := ∀ f : sym2 (fin N) → fin 2,
 (∃ S, (graph_at_color (complete_graph (fin N)) f 0).is_n_clique s S) 
 ∨ (∃ T, (graph_at_color (complete_graph (fin N)) f 1).is_n_clique t T)
 
-lemma Ramsey_monotone : ∀ N s t, Ramsey_prop N s t → ∀ M, N ≤ M → Ramsey_prop M s t :=
+lemma Ramsey_monotone : ∀ {N s t}, Ramsey_prop N s t → ∀ {M}, N ≤ M → Ramsey_prop M s t :=
 begin
 unfold Ramsey_prop,
 intros _ _ _ R _ NleqM _,
@@ -100,5 +100,56 @@ end
 theorem friendship_upper_bound : Ramsey_prop 6 3 3 := sorry
 
 noncomputable def Ramsey (s t : ℕ) : ℕ := Inf { N : ℕ | Ramsey_prop N s t }
+
+theorem Ramsey2 : ∀ k : ℕ, Ramsey 2 k.succ = k.succ :=
+begin
+intros,
+unfold Ramsey,
+have Ramsey2_monotone : ∀ M₁ M₂, M₁ ≤ M₂ → M₁ ∈ { N : ℕ | Ramsey_prop N 2 k.succ } → M₂ ∈ { N : ℕ | Ramsey_prop N 2 k.succ },
+intros M₁ M₂ M₁leM₂,
+simp,
+intro M₁Ramsey,
+apply Ramsey_monotone M₁Ramsey M₁leM₂,
+rewrite nat.Inf_upward_closed_eq_succ_iff (Ramsey2_monotone),
+simp,
+split,
+unfold Ramsey_prop,
+intros,
+cases finset.eq_empty_or_nonempty (finset.filter (λ (x : sym2 (fin k.succ)), (x.out.1 ≠ x.out.2) ∧ f x = 0) finset.univ),
+rw finset.filter_eq_empty_iff at h,
+simp at h,
+right,
+use finset.univ,
+have cliqueproof : (graph_at_color (complete_graph (fin (k + 1))) f 1).is_clique (fintype.elems (fin k.succ)),
+rw simple_graph.is_clique_iff,
+simp [set.pairwise, graph_at_color],
+intros x xin y yin xneqy,
+split,
+exact xneqy,
+let fxy := f ⟦(x, y)⟧,
+fin_cases fxy using fxyval,
+simp [fxy] at fxyval,
+have missing : ⟦(x, y)⟧.out.1 ≠ ⟦(x, y)⟧.out.2 := sorry,
+cases h ⟦(x, y)⟧ missing fxyval,
+simp [← fxy, fxyval],
+have cardproof : (fintype.elems (fin k.succ)).card = k.succ,
+change finset.univ.card = k.succ,
+simp,
+use { clique := cliqueproof, card_eq := cardproof },
+rw finset.filter_nonempty_iff at h,
+rcases h with ⟨e, ein, ⟨fxynoloop, fe0⟩⟩,
+left,
+use (insert e.out.1 (insert e.out.2 finset.empty)),
+have cliqueproof : (graph_at_color (complete_graph (fin (k + 1))) f 0).is_clique (insert e.out.fst (insert e.out.snd ∅)),
+rw simple_graph.is_clique_iff,
+simp [set.pairwise, graph_at_color],
+split,
+intro h,
+split; assumption,
+intro h,
+rw [sym2.eq_swap, prod.mk.eta, e.out_eq],
+split; assumption,
+sorry
+end
 
 theorem friendship : Ramsey 3 3 = 6 := sorry
