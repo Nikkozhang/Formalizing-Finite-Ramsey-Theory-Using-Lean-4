@@ -1,6 +1,7 @@
 import combinatorics.pigeonhole
 import combinatorics.simple_graph.clique
 import tactic.fin_cases
+import data.finset
 
 import .pick_tactic
 
@@ -27,7 +28,8 @@ def Ramsey_prop (N s t : ℕ) : Prop := ∀ f : sym2 (fin N) → fin 2,
 (∃ S, (graph_at_color (complete_graph (fin N)) f 0).is_n_clique s S) 
 ∨ (∃ T, (graph_at_color (complete_graph (fin N)) f 1).is_n_clique t T)
 
-lemma Ramsey_monotone : ∀ {N s t}, Ramsey_prop N s t → ∀ {M}, N ≤ M → Ramsey_prop M s t :=
+lemma Ramsey_monotone : ∀ {N s t}, Ramsey_prop N s t → ∀ {M}, N ≤ M 
+→ Ramsey_prop M s t :=
 begin
 unfold Ramsey_prop,
 intros _ _ _ R _ NleqM _,
@@ -37,7 +39,8 @@ rcases h with ⟨S, Sprop⟩,
 cases Sprop,
 left,
 use (finset.map (fin.cast_le NleqM).to_embedding S),
-have cliqueproof : (graph_at_color (complete_graph (fin M)) f 0).is_clique (finset.map (fin.cast_le NleqM).to_embedding S),
+have cliqueproof : (graph_at_color (complete_graph (fin M)) f 0).is_clique 
+(finset.map (fin.cast_le NleqM).to_embedding S),
 simp [simple_graph.is_clique_iff, set.pairwise, graph_at_color] at Sprop_clique ⊢,
 intros x xinS y yinS xneqy,
 split,
@@ -51,7 +54,8 @@ rcases h with ⟨T, Tprop⟩,
 cases Tprop,
 right,
 use (finset.map (fin.cast_le NleqM).to_embedding T),
-have cliqueproof : (graph_at_color (complete_graph (fin M)) f 1).is_clique (finset.map (fin.cast_le NleqM).to_embedding T),
+have cliqueproof : (graph_at_color (complete_graph (fin M)) f 1).is_clique 
+(finset.map (fin.cast_le NleqM).to_embedding T),
 simp [simple_graph.is_clique_iff, set.pairwise, graph_at_color] at Tprop_clique ⊢,
 intros x xinT y yinT xneqy,
 split,
@@ -105,7 +109,8 @@ theorem Ramsey2 : ∀ k : ℕ, Ramsey 2 k.succ = k.succ :=
 begin
 intros,
 unfold Ramsey,
-have Ramsey2_monotone : ∀ M₁ M₂, M₁ ≤ M₂ → M₁ ∈ { N : ℕ | Ramsey_prop N 2 k.succ } → M₂ ∈ { N : ℕ | Ramsey_prop N 2 k.succ },
+have Ramsey2_monotone : ∀ M₁ M₂, M₁ ≤ M₂ → M₁ ∈ { N : ℕ | Ramsey_prop N 2 k.succ } 
+→ M₂ ∈ { N : ℕ | Ramsey_prop N 2 k.succ },
 intros M₁ M₂ M₁leM₂,
 simp,
 intro M₁Ramsey,
@@ -115,21 +120,32 @@ simp,
 split,
 unfold Ramsey_prop,
 intros,
-cases finset.eq_empty_or_nonempty (finset.filter (λ (x : sym2 (fin k.succ)), (x.out.1 ≠ x.out.2) ∧ f x = 0) finset.univ),
+cases finset.eq_empty_or_nonempty (finset.filter 
+(λ (x : sym2 (fin k.succ)), (x.out.1 ≠ x.out.2) ∧ f x = 0) finset.univ),
 rw finset.filter_eq_empty_iff at h,
 simp at h,
 right,
 use finset.univ,
-have cliqueproof : (graph_at_color (complete_graph (fin (k + 1))) f 1).is_clique (fintype.elems (fin k.succ)),
+have cliqueproof : (graph_at_color (complete_graph (fin (k + 1))) f 1).is_clique
+ (fintype.elems (fin k.succ)),
 rw simple_graph.is_clique_iff,
 simp [set.pairwise, graph_at_color],
 intros x xin y yin xneqy,
 split,
 exact xneqy,
-let fxy := f ⟦(x, y)⟧,
-fin_cases fxy using fxyval,
+let fxy := f ⟦(x, y)⟧,fin_cases fxy using fxyval,
 simp [fxy] at fxyval,
-have missing : ⟦(x, y)⟧.out.1 ≠ ⟦(x, y)⟧.out.2 := sorry,
+
+have missing : ⟦(x, y)⟧.out.1 ≠ ⟦(x, y)⟧.out.2 :=
+begin
+have temp := h ⟦(x, y)⟧,
+--by_contra h',
+--apply h ⟦(x, y)⟧, 
+--rw quotient.out_inj,
+--rw h',
+sorry
+end,
+
 cases h ⟦(x, y)⟧ missing fxyval,
 simp [← fxy, fxyval],
 have cardproof : (fintype.elems (fin k.succ)).card = k.succ,
@@ -140,7 +156,8 @@ rw finset.filter_nonempty_iff at h,
 rcases h with ⟨e, ein, ⟨fxynoloop, fe0⟩⟩,
 left,
 use (insert e.out.1 (insert e.out.2 finset.empty)),
-have cliqueproof : (graph_at_color (complete_graph (fin (k + 1))) f 0).is_clique (insert e.out.fst (insert e.out.snd ∅)),
+have cliqueproof : (graph_at_color (complete_graph (fin (k + 1))) f 0).is_clique 
+(insert e.out.fst (insert e.out.snd ∅)),
 rw simple_graph.is_clique_iff,
 simp [set.pairwise, graph_at_color],
 split,
@@ -149,6 +166,30 @@ split; assumption,
 intro h,
 rw [sym2.eq_swap, prod.mk.eta, e.out_eq],
 split; assumption,
+rw simple_graph.is_n_clique_iff,
+simp,
+split,
+exact cliqueproof,
+rw finset.card_insert_of_not_mem,
+rw finset.card_insert_of_not_mem,
+tauto,
+tauto,
+simp,
+by_contra,
+cases h,
+tauto,
+tauto,
+
+unfold Ramsey_prop,
+simp,
+let f : sym2 (fin k) → fin 2 := λ e, 1,
+use f,
+by_contra,
+cases h,
+rcases h with ⟨ S, S_prop ⟩,
+
+rw simple_graph.is_n_clique_iff at S_prop,
+rcases S_prop with ⟨SisClique,S_card⟩,
 sorry
 end
 
