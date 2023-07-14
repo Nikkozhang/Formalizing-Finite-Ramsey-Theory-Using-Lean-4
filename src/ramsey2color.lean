@@ -190,6 +190,20 @@ rcases h with ⟨ S, S_prop ⟩,
 
 rw simple_graph.is_n_clique_iff at S_prop,
 rcases S_prop with ⟨SisClique,S_card⟩,
+unfold graph_at_color at SisClique,
+simp [simple_graph.is_clique_iff] at SisClique,
+pick 2 from (finset.filter (λx : fin k, x ∈ S ) finset.univ) with x y,
+
+
+-- have S_exist_x : ∃x , x ∈ S,
+-- have S_card_pos : 0 < S.card := by linarith only [S_card],
+-- have S_non_empty: S.nonempty,
+-- rw ← finset.card_pos,
+-- exact S_card_pos,
+-- apply finset.nonempty.bex S_non_empty,
+--rcases S_exist_x with ⟨x,xprop⟩,
+--simp [xprop, SisClique],
+
 sorry
 end
 
