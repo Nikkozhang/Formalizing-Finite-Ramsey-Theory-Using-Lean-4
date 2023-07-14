@@ -164,21 +164,14 @@ rw simple_graph.is_n_clique_iff,
 simp,
 split,
 exact cliqueproof,
-rw finset.card_insert_of_not_mem,
-rw finset.card_insert_of_not_mem,
+rw finset.card_eq_two,
+use [(quotient.out e).fst, (quotient.out e).snd],
 tauto,
-tauto,
-simp,
-by_contra,
-cases h,
-tauto,
-tauto,
-
 unfold Ramsey_prop,
 simp,
 let f : sym2 (fin k) → fin 2 := λ e, 1,
 use f,
-by_contra,
+intro h,
 cases h,
 rcases h with ⟨ S, S_prop ⟩,
 
@@ -188,32 +181,17 @@ unfold graph_at_color at SisClique,
 simp [simple_graph.is_clique_iff, set.pairwise, graph_at_color] at SisClique,
 rw finset.card_eq_two at S_card,
 rcases S_card with ⟨x,y,⟨xneqy,Sxy⟩ ⟩  ,
-have xins : x ∈ S := by rw Sxy;simp,
-have yins : y ∈ S := by rw Sxy;simp,
+have xins : x ∈ S := by rw Sxy; simp,
+have yins : y ∈ S := by rw Sxy; simp,
 exact SisClique xins yins xneqy,
---pick 2 from (finset.filter (λx y: fin k, x ≠ y ∧ x ∈ S ∧ y ∈ S ) finset.univ) with x y,
 
-rcases h with ⟨T,TisClique⟩ ,
-have kcard : fintype.card (fin k) < k.succ := sorry,
+rcases h with ⟨T,TisClique⟩,
+have kcard : fintype.card (fin k) < k.succ := by simp; apply nat.le_refl,
 have cliquefree : (graph_at_color (complete_graph (fin k)) f 1).clique_free k.succ := 
 by apply simple_graph.clique_free_of_card_lt kcard,
 unfold simple_graph.clique_free at cliquefree,
 have Tcontra :=  cliquefree T,
-contradiction,
-
-
---simp [simple_graph.is_clique_iff, set.pairwise, graph_at_color] at TisClique,
-
--- have S_exist_x : ∃x , x ∈ S,
--- have S_card_pos : 0 < S.card := by linarith only [S_card],
--- have S_non_empty: S.nonempty,
--- rw ← finset.card_pos,
--- exact S_card_pos,
--- apply finset.nonempty.bex S_non_empty,
---rcases S_exist_x with ⟨x,xprop⟩,
---simp [xprop, SisClique],
-
-sorry
+contradiction
 end
 
 theorem friendship : Ramsey 3 3 = 6 := sorry
