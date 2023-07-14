@@ -101,7 +101,39 @@ rw simple_graph.is_n_clique_iff,
 split,assumption, assumption,
 end
 
-theorem friendship_upper_bound : Ramsey_prop 6 3 3 := sorry
+theorem friendship_upper_bound : Ramsey_prop 6 3 3 :=
+begin
+unfold Ramsey_prop,
+intros,
+let g : ((complete_graph (fin 6)).neighbor_set 0) → fin 2 := λ x, f ⟦(0, x)⟧,
+have ghyp : fintype.card (fin 2) • 2 < fintype.card ↥((complete_graph (fin 6)).neighbor_set 0),
+simp,
+linarith,
+have ghyp := fintype.exists_lt_card_fiber_of_mul_lt_card g ghyp,
+rcases ghyp with ⟨c, chyp⟩,
+pick 3 from (finset.filter (λ (x : ↥((complete_graph (fin 6)).neighbor_set 0)), g x = c) finset.univ) with x y z,
+simp [g] at x.elem y.elem z.elem,
+cases nat.eq_zero_or_pos (finset.filter (λ e, e = c) (insert (f ⟦(↑x, ↑y)⟧) (insert (f ⟦(↑y, ↑z)⟧) (insert (f ⟦(↑x, ↑z)⟧) (∅:(finset (fin 2))))))).card,
+rotate,
+pick 1 from (finset.filter (λ (e : fin 2), e = c) {f ⟦(↑x, ↑y)⟧, f ⟦(↑y, ↑z)⟧, f ⟦(↑x, ↑z)⟧}) with e,
+simp at e.elem,
+cases e.elem.left with ef,
+fin_cases c,
+left,
+cases e.elem with evalue ecolor,
+cases evalue,
+rw evalue at ecolor,
+use (insert 0 (insert ↑x (insert ↑y (∅:(finset (fin 6)))))),
+simp [graph_at_color, complete_graph],
+constructor,
+simp [simple_graph.is_clique_iff, set.pairwise],
+rw [@sym2.eq_swap (fin 6) ↑x 0, @sym2.eq_swap (fin 6) ↑y 0, @sym2.eq_swap (fin 6) ↑y ↑x],
+tauto,
+rw finset.card_eq_three,
+use [0, ↑x, ↑y],
+simp,
+sorry
+end
 
 noncomputable def Ramsey (s t : ℕ) : ℕ := Inf { N : ℕ | Ramsey_prop N s t }
 
