@@ -138,7 +138,11 @@ simp [fxy] at fxyval,
 
 have missing : ⟦(x, y)⟧.out.1 ≠ ⟦(x, y)⟧.out.2 :=
 begin
+cases (fin.decidable_eq (k + 1) (⟦(x, y)⟧.out.1) (⟦(x, y)⟧.out.2)),
+assumption,
 have temp := h ⟦(x, y)⟧,
+--intro h',
+--exact temp h' fxyval,
 --by_contra h',
 --apply h ⟦(x, y)⟧, 
 --rw quotient.out_inj,
@@ -199,6 +203,16 @@ have yins : y ∈ S := by rw Sxy;simp,
 exact SisClique xins yins xneqy,
 --pick 2 from (finset.filter (λx y: fin k, x ≠ y ∧ x ∈ S ∧ y ∈ S ) finset.univ) with x y,
 
+rcases h with ⟨T,TisClique⟩ ,
+have kcard : fintype.card (fin k) < k.succ := sorry,
+have cliquefree : (graph_at_color (complete_graph (fin k)) f 1).clique_free k.succ := 
+by apply simple_graph.clique_free_of_card_lt kcard,
+unfold simple_graph.clique_free at cliquefree,
+have Tcontra :=  cliquefree T,
+contradiction,
+
+
+--simp [simple_graph.is_clique_iff, set.pairwise, graph_at_color] at TisClique,
 
 -- have S_exist_x : ∃x , x ∈ S,
 -- have S_card_pos : 0 < S.card := by linarith only [S_card],
