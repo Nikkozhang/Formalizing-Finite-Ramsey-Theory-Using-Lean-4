@@ -1,7 +1,7 @@
 import combinatorics.pigeonhole
 import combinatorics.simple_graph.clique
 import tactic.fin_cases
-import data.finset
+import data.fintype.card
 
 import .pick_tactic
 
@@ -117,13 +117,11 @@ cases nat.eq_zero_or_pos (finset.filter (λ e, e = c) (insert (f ⟦(↑x, ↑y)
 rotate,
 pick 1 from (finset.filter (λ (e : fin 2), e = c) {f ⟦(↑x, ↑y)⟧, f ⟦(↑y, ↑z)⟧, f ⟦(↑x, ↑z)⟧}) with e,
 simp at e.elem,
-cases e.elem.left with ef,
-fin_cases c,
-left,
-cases e.elem with evalue ecolor,
-cases evalue,
-rw evalue at ecolor,
-use (insert 0 (insert ↑x (insert ↑y (∅:(finset (fin 6)))))),
+rcases e.elem with ⟨eval, ecolor⟩,
+have c0 : ∃ a b : (fin 6), (graph_at_color (complete_graph (fin 6)) f c).is_n_clique 3 {0, a, b},
+rcases eval with eval | ⟨eval | eval⟩; rw eval at ecolor,
+--✁--
+use [↑x, ↑y],
 simp [graph_at_color, complete_graph],
 constructor,
 simp [simple_graph.is_clique_iff, set.pairwise],
@@ -132,6 +130,31 @@ tauto,
 rw finset.card_eq_three,
 use [0, ↑x, ↑y],
 simp,
+split,
+exact x.prop,
+split,
+exact y.prop,
+intro xeqy,
+change ↑x < ↑y at x.lt.y,
+simp [xeqy] at x.lt.y,
+exact x.lt.y,
+--✃--
+--TODO Paste here
+admit,
+admit,
+--
+
+rcases c0 with ⟨a, b, clique0ab⟩,
+fin_cases c,
+
+left,
+use {0, a, b},
+assumption,
+
+right,
+use {0, a, b},
+assumption,
+
 sorry
 end
 
