@@ -5,6 +5,7 @@ import data.fintype.card
 
 import .pick_tactic
 
+
 def graph_at_color {N : ℕ} (G : simple_graph (fin N)) (ϕ : sym2 (fin N) → fin 2)
  (i : fin 2): simple_graph (fin N) := {
   adj := λ u v, (G.adj u v) ∧ (ϕ ⟦(u, v)⟧ = i),
@@ -192,10 +193,36 @@ right,
 use {0, a, b},
 assumption,
 
-let d := f ⟦(↑x, ↑y)⟧,
-have temp1: d = f ⟦(↑y, ↑z)⟧ := by sorry,
-have temp2: d = f ⟦(↑x, ↑z)⟧ := by sorry,
-have d0 :(graph_at_color (complete_graph (fin 6)) f  d ) .is_n_clique 3 {↑x, ↑ y, ↑ z},
+simp at h,
+rw finset.filter_eq_empty_iff {f ⟦(↑x, ↑y)⟧, f ⟦(↑y, ↑z)⟧, f ⟦(↑x, ↑z)⟧} at h,
+--have fneqc := finset.filter_eq_empty_iff {f ⟦(↑x, ↑y)⟧, f ⟦(↑y, ↑z)⟧, f ⟦(↑x, ↑z)⟧} h,
+simp at h,
+rcases h with ⟨fxyneqc, fyzneqc, fxzneqc⟩,
+
+have notc : ∀ {c : fin 2}, ∀ {x y : sym2(fin 6)}, f x ≠ c → f y ≠ c → f x = f y,
+intros c x y h₁ h₂,
+let c₁ := f x, 
+let c₂ := f y,
+change c₁ = c₂,
+
+fin_cases c,
+
+fin_cases c₁ using h_1,
+contradiction,
+fin_cases c₂ using h_2,
+contradiction,
+rw [h_1, h_2],
+
+fin_cases c₁ using h_1,
+fin_cases c₂ using h_2,
+rw [h_1, h_2],
+contradiction,
+contradiction,
+
+
+have temp1: f ⟦(↑x, ↑y)⟧ = f ⟦(↑y, ↑z)⟧ := notc fxyneqc fyzneqc,
+have temp2: f ⟦(↑x, ↑y)⟧ = f ⟦(↑x, ↑z)⟧:= notc fxyneqc fxzneqc,
+have d0 :(graph_at_color (complete_graph (fin 6)) f  (f ⟦(↑x, ↑y)⟧)) .is_n_clique 3 {↑x, ↑ y, ↑ z},
 simp [graph_at_color, complete_graph],
 constructor,
 simp [simple_graph.is_clique_iff, set.pairwise],
@@ -205,11 +232,34 @@ rw finset.card_eq_three,
 use [↑x, ↑y, ↑z],
 simp,
 split,
-admit,--exact x.prop,
-split,
-admit,--exact y.prop,
-admit,--exact z.prop,
 
+intro xeqy,
+change ↑x < ↑y at x.lt.y,
+simp [xeqy] at x.lt.y,
+exact x.lt.y,
+
+split,
+
+intro xeqz,
+have x.lt.z : x < z,
+transitivity y,
+exact x.lt.y,
+exact y.lt.z,
+change ↑x < ↑z at x.lt.z,
+simp [xeqz] at x.lt.z,
+exact x.lt.z,
+
+intro yeqz,
+change ↑y < ↑z at y.lt.z,
+simp [yeqz] at y.lt.z,
+exact y.lt.z,
+
+let d := f ⟦(↑x, ↑y)⟧,
+have fxyeqd : f ⟦(↑x, ↑y)⟧ = d,
+change d = d,
+refl,
+
+rw fxyeqd at d0,
 fin_cases d using hd,
 rw hd at d0, 
 left,
