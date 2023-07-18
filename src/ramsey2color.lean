@@ -121,7 +121,7 @@ simp at e.elem,
 rcases e.elem with ⟨eval, ecolor⟩,
 have c0 : ∃ a b : (fin 6), (graph_at_color (complete_graph (fin 6)) f c).is_n_clique 3 {0, a, b},
 rcases eval with eval | ⟨eval | eval⟩; rw eval at ecolor,
---✁--
+
 use [↑x, ↑y],
 simp [graph_at_color, complete_graph],
 constructor,
@@ -139,8 +139,7 @@ intro xeqy,
 change ↑x < ↑y at x.lt.y,
 simp [xeqy] at x.lt.y,
 exact x.lt.y,
---✃--
---TODO Paste here
+
 use [↑y, ↑z],
 simp [graph_at_color, complete_graph],
 constructor,
@@ -180,7 +179,6 @@ exact y.lt.z,
 change ↑x < ↑z at x.lt.z,
 simp [xeqz] at x.lt.z,
 exact x.lt.z,
---
 
 rcases c0 with ⟨a, b, clique0ab⟩,
 fin_cases c,
@@ -195,7 +193,6 @@ assumption,
 
 simp at h,
 rw finset.filter_eq_empty_iff {f ⟦(↑x, ↑y)⟧, f ⟦(↑y, ↑z)⟧, f ⟦(↑x, ↑z)⟧} at h,
---have fneqc := finset.filter_eq_empty_iff {f ⟦(↑x, ↑y)⟧, f ⟦(↑y, ↑z)⟧, f ⟦(↑x, ↑z)⟧} h,
 simp at h,
 rcases h with ⟨fxyneqc, fyzneqc, fxzneqc⟩,
 
@@ -255,18 +252,12 @@ simp [yeqz] at y.lt.z,
 exact y.lt.z,
 
 let d := f ⟦(↑x, ↑y)⟧,
-have fxyeqd : f ⟦(↑x, ↑y)⟧ = d,
-change d = d,
-refl,
+fin_cases d using hd; simp [← d, hd] at d0,
 
-rw fxyeqd at d0,
-fin_cases d using hd,
-rw hd at d0, 
 left,
 use {↑x,↑y,↑z},
 assumption,
 
-rw hd at d0, 
 right,
 use {↑x,↑y,↑z},
 assumption,
