@@ -67,8 +67,10 @@ rw ← (finset.card_map (fin.cast_le NleqM).to_embedding) at Tprop_card_eq,
 use { clique := cliqueproof, card_eq := Tprop_card_eq },
 end
 
-def Ramsey_symm : ∀ N s t, Ramsey_prop N s t → Ramsey_prop N t s :=
+
+theorem Ramsey_prop_symm : ∀ N s t : ℕ, Ramsey_prop N s t ↔ Ramsey_prop N t s :=
 begin
+have helper : ∀ N s t, Ramsey_prop N s t → Ramsey_prop N t s,
 unfold Ramsey_prop,
 intros _ _ _ R _,
 let f' : sym2 (fin N) → fin 2 := λ e, if f e = 0 then 1 else 0,
@@ -100,6 +102,9 @@ by_contra,
 apply fxyneq1 h,
 rw simple_graph.is_n_clique_iff,
 split,assumption, assumption,
+
+intros,
+use ⟨helper N s t, helper N t s⟩
 end
 
 theorem friendship_upper_bound : Ramsey_prop 6 3 3 :=
