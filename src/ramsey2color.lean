@@ -603,7 +603,7 @@ simp at a₁a₂eq,
 exact a₁a₂eq,
 let ftransemb : function.embedding (fin (finset.filter (λ (y : fin (N + M)), f ⟦(0, y)⟧ = 0) ((complete_graph (fin (N + M))).neighbor_finset 0)).card) (fin (N + M)) := ⟨λ x, ↑(ftrans ⟨x, finset.mem_univ x⟩), ftransembinj⟩,
 unfold Ramsey_prop at RamseySub,
-cases RamseySub.right (λ e, f ⟦(ftrans ⟨e.out.1, _⟩, ftrans ⟨e.out.2, _⟩)⟧) with clique; continue { clear RamseySub, simp },
+cases RamseySub.right (λ e, f ⟦(ftrans ⟨e.out.1, _⟩, ftrans ⟨e.out.2, _⟩)⟧) with clique clique; continue { clear RamseySub, simp },
 
 rcases clique with ⟨S, Sclique⟩,
 left,
