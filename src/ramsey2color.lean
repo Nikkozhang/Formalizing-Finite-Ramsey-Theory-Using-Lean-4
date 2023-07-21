@@ -3,6 +3,8 @@ import combinatorics.simple_graph.clique
 import tactic.fin_cases
 import data.fin.vec_notation
 import data.rat.floor
+import algebra.order.floor
+import data.int.basic
 
 import .pick_tactic
 
@@ -34,7 +36,11 @@ lemma Ramsey_monotone : ∀ {N s t}, Ramsey_prop N s t → ∀ {M}, N ≤ M
 → Ramsey_prop M s t :=
 begin
 unfold Ramsey_prop,
-intros _ _ _ R _ NleqM _,
+intros _ _ _ R _ NleqM,
+rcases R with ⟨ Ngt0, R⟩,
+split, 
+linarith only[Ngt0, NleqM],
+intros,
 let f' : sym2 (fin N) → fin 2 := λ e, f (sym2.map (fin.cast_le NleqM) e),
 cases (R f'),
 rcases h with ⟨S, Sprop⟩,
@@ -73,7 +79,11 @@ theorem Ramsey_prop_symm : ∀ N s t : ℕ, Ramsey_prop N s t ↔ Ramsey_prop N 
 begin
 have helper : ∀ N s t, Ramsey_prop N s t → Ramsey_prop N t s,
 unfold Ramsey_prop,
-intros _ _ _ R _,
+intros _ _ _ R,
+rcases R with ⟨Ngt0, R⟩,
+split,
+exact Ngt0,
+intro,
 let f' : sym2 (fin N) → fin 2 := λ e, if f e = 0 then 1 else 0,
 cases (R f'),
 rcases h with ⟨S, ⟨Sclique, Scard⟩⟩,
@@ -105,12 +115,14 @@ rw simple_graph.is_n_clique_iff,
 split,assumption, assumption,
 
 intros,
-use ⟨helper N s t, helper N t s⟩
+use ⟨helper N s t, helper N t s⟩,
 end
 
 theorem friendship_upper_bound : Ramsey_prop 6 3 3 :=
 begin
 unfold Ramsey_prop,
+split,
+simp,
 intros,
 let g : ((complete_graph (fin 6)).neighbor_set 0) → fin 2 := λ x, f ⟦(0, x)⟧,
 have ghyp : fintype.card (fin 2) • 2 < fintype.card ↥((complete_graph (fin 6)).neighbor_set 0),
@@ -286,6 +298,8 @@ rewrite nat.Inf_upward_closed_eq_succ_iff (Ramsey2_monotone),
 simp,
 split,
 unfold Ramsey_prop,
+split,
+simp,
 intros,
 cases finset.eq_empty_or_nonempty (finset.filter 
 (λ (x : sym2 (fin k.succ)), (x.out.1 ≠ x.out.2) ∧ f x = 0) finset.univ),
@@ -336,6 +350,7 @@ use [(quotient.out e).fst, (quotient.out e).snd],
 tauto,
 unfold Ramsey_prop,
 simp,
+intro,
 let f : sym2 (fin k) → fin 2 := λ e, 1,
 use f,
 intro h,
@@ -358,7 +373,7 @@ have cliquefree : (graph_at_color (complete_graph (fin k)) f 1).clique_free k.su
 by apply simple_graph.clique_free_of_card_lt kcard,
 unfold simple_graph.clique_free at cliquefree,
 have Tcontra :=  cliquefree T,
-contradiction
+contradiction,
 end
 
 lemma missing_pigeonhole {α : Type} [decidable_eq α] : ∀ {s : finset α}, finset.nonempty s → ∀ {f g : α → ℚ}, s.sum f ≤ s.sum g → ∃ a : α, a ∈ s ∧ f a ≤ g a :=
@@ -511,14 +526,15 @@ rw NplusM,
 apply fin.has_zero,
 let g : fin 2 → ℚ := λ x, (finset.filter (λ y, f ⟦(0, y)⟧ = x) ((complete_graph (fin (N + M))).neighbor_finset 0)).card,
 let h : fin 2 → ℚ := ![↑N - rat.mk 1 2, ↑M - rat.mk 1 2],
-have hgsum : finset.univ.sum h = finset.univ.sum g := sorry,
--- have testing : finset.univ = (insert (fin.mk 1 _) (insert (fin.mk 0 _) (∅:(finset (fin 2))))); try { simp },
+have hgsum : finset.univ.sum h = finset.univ.sum g := by sorry,
+--have testing : finset.univ = (insert (fin.mk 1 _) (insert (fin.mk 0 _) (∅:(finset (fin 2))))); try { simp },
 -- symmetry,
 -- rw finset.eq_univ_iff_forall,
 -- intros,
 -- fin_cases x; simp,
 -- rw testing,
 -- simp [h, g],
+
 have mp := missing_pigeonhole (exists.intro (0 : fin 2) _) (le_of_eq hgsum); try { simp },
 rcases mp with ⟨a, ainuniv, gha⟩,
 fin_cases a,
@@ -526,18 +542,32 @@ simp [g, h] at gha,
 have NtoZ : (↑N:ℚ) = (↑N:ℤ) := by simp,
 rw NtoZ at gha,
 rw ← rat.le_floor at gha,
-have floormagic : ∀ (n m : ℕ) (q : ℚ), q < 1 → ↑n ≤ (↑m + q).floor → n ≤ m := sorry,
--- intros _ _ _ smallq nlemfloor,
+have floormagic : ∀ (n m : ℕ) (q : ℚ), q ≥ 0 → q < 1 → ↑n ≤ ⌊(↑m + q)⌋  → n ≤ m,
+intros _ _  _ _ smallqat nlemfloor,
+rw  int.floor_nat_add at nlemfloor,
+have qflreq0 :⌊q⌋ = 0,
+rw int.floor_eq_iff,
+split,
+assumption,
+simp,
+exact smallqat,
+simp [qflreq0] at nlemfloor,
+exact nlemfloor,
+--simp [rat.le_floor] at nlemfloor,
+-- rw smallq at nlemfloor,
 -- cases (le_or_gt n m),
 -- assumption,
 -- unfold gt at h_1,
 -- change m.succ ≤ n at h_1,
 -- rw ← nat.add_one at h_1,
 -- rw ← int.coe_nat_le at h_1,
--- rw (rat.cast_coe_nat (m + 1)) at h_1,
-have halflt1 : rat.mk_nat 1 2 < 1 := sorry,
--- rw rat.lt_def,
--- simp,
+--rw (rat.cast_coe_nat (m + 1)) at h_1,
+have halflt1 : rat.mk_pnat 1 2 < 1,
+rw  rat.lt_one_iff_num_lt_denom,
+rw rat.mk_pnat_num,
+rw rat.mk_pnat_denom,
+simp,
+linarith,
 have NleqNeighbor0 := floormagic N ((finset.filter (λ (y : fin (N + M)), f ⟦(0, y)⟧ = 0)
              ((complete_graph (fin (N + M))).neighbor_finset 0)).card) (rat.mk_nat 1 2) halflt1 gha,
 have RamseySub := Ramsey_monotone RamseyN NleqNeighbor0,
