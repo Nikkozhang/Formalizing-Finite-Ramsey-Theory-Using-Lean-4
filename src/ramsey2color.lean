@@ -1,6 +1,8 @@
 import combinatorics.pigeonhole
 import combinatorics.simple_graph.clique
 import tactic.fin_cases
+import data.fin.vec_notation
+import data.rat.floor
 
 import .pick_tactic
 
