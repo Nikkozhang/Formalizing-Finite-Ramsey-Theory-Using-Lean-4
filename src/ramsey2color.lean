@@ -1,10 +1,12 @@
 import combinatorics.pigeonhole
 import combinatorics.simple_graph.clique
-import tactic.fin_cases
 import data.fin.vec_notation
 import data.rat.floor
 import algebra.order.floor
 import data.int.basic
+
+import tactic.fin_cases
+import tactic.induction
 
 import .pick_tactic
 
@@ -605,6 +607,7 @@ unfold Ramsey_prop at RamseySub,
 cases RamseySub.right (λ e, f ⟦(ftrans ⟨e.out.1, _⟩, ftrans ⟨e.out.2, _⟩)⟧) with clique; continue { clear RamseySub, simp },
 rcases clique with ⟨S, Sclique⟩,
 let S' := S.map ftransemb,
+
 left,
 use (insert 0 S'),
 constructor,
@@ -621,14 +624,22 @@ split,
 rw [sym2.eq_swap],
 intros ftransa,
 simp [ftransa, ftransaprop.right],
-intros a' a'inS ftransneq,
+intros b binS ftransneq,
 simp [ftransneq],
 simp [simple_graph.is_clique_iff, set.pairwise, graph_at_color] at Sclique,
-cases (fin.decidable_eq _ a a') with aneqa' aeqa',
-have tyg := Sclique.clique ainS a'inS aneqa',
-admit,
-rw ← @subtype.mk_eq_mk (fin (finset.filter (λ (y : fin (N + M)), f ⟦(0, y)⟧ = 0) ((complete_graph (fin (N + M))).neighbor_finset 0)).card) (λ x, x ∈ finset.univ) a (finset.mem_univ a) a' (finset.mem_univ a') at aeqa',
-have ftranseq := congr_arg ftrans aeqa',
+cases (fin.decidable_eq _ a b) with aneqb aeqb,
+have abedge := Sclique.clique ainS binS aneqb,
+simp at abedge,
+cases' quotient.mk_out (a, b),
+rw ← cases_eq at abedge,
+simp at abedge,
+exact abedge.right,
+rw ← cases_eq at abedge,
+simp at abedge,
+rw [sym2.eq_swap],
+exact abedge.right,
+rw ← @subtype.mk_eq_mk (fin (finset.filter (λ (y : fin (N + M)), f ⟦(0, y)⟧ = 0) ((complete_graph (fin (N + M))).neighbor_finset 0)).card) (λ x, x ∈ finset.univ) a (finset.mem_univ a) b (finset.mem_univ b) at aeqb,
+have ftranseq := congr_arg ftrans aeqb,
 rw subtype.ext_iff at ftranseq,
 cases ftransneq ftranseq,
 have znotinS' : mrcl.zero ∉ S',
