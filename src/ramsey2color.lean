@@ -3,7 +3,6 @@ import combinatorics.simple_graph.clique
 import data.fin.vec_notation
 import data.rat.floor
 import algebra.order.floor
-import data.int.basic
 
 import tactic.fin_cases
 import tactic.induction
