@@ -678,4 +678,88 @@ simp [Tclique.card_eq],
 
 end
 
+theorem Ramsey_finite : ∀ s t : ℕ, { N : ℕ | Ramsey_prop N s.succ t.succ }.nonempty :=
+begin
+suffices Ramsey_finite_additive : ∀ m : ℕ, ∀ s t, m = s + t → { N : ℕ | Ramsey_prop N s.succ t.succ }.nonempty,
+intros,
+apply (Ramsey_finite_additive (s + t) s t),
+simp,
+intro,
+induction m with st ih,
+intros _ _ h,
+have h' := eq.symm h,
+simp at h',
+cases h' with s0 t0,
+simp [s0, t0],
+use 1,
+simp,
+unfold Ramsey_prop,
+simp,
+intro,
+use {0},
+constructor; simp [simple_graph.is_clique_iff, set.pairwise],
+intros _ _ h,
+cases s; cases t,
+use 1,
+use 1,
+simp,
+apply Ramsey1_prop,
+use 1,
+simp,
+rw Ramsey_prop_symm,
+apply Ramsey1_prop,
+have s1t : st = s + t.succ,
+have stsuccpred := congr_arg nat.pred h,
+simp at stsuccpred,
+rw stsuccpred,
+simp [nat.succ_add],
+have st1 : st = s.succ + t,
+have stsuccpred := congr_arg nat.pred h,
+simp at stsuccpred,
+rw stsuccpred,
+simp [nat.add_succ],
+have RamseyS := ih s t.succ s1t,
+have RamseyT := ih s.succ t st1,
+cases RamseyS with S Sprop,
+cases RamseyT with T Tprop,
+simp at Sprop Tprop,
+use (S + T),
+simp,
+apply Ramsey_prop_ineq; assumption,
+end
+
+theorem Ramsey_ineq : ∀ s t : ℕ, Ramsey s.succ.succ t.succ.succ ≤ Ramsey s.succ t.succ.succ + Ramsey s.succ.succ t.succ :=
+begin
+intros,
+have RamseyM := nat.Inf_mem (Ramsey_finite s t.succ),
+have RamseyN := nat.Inf_mem (Ramsey_finite s.succ t),
+simp at RamseyM RamseyN,
+apply nat.Inf_le,
+simp,
+apply Ramsey_prop_ineq; assumption
+end
+
+theorem Ramsey_symm : ∀  s t: ℕ, Ramsey s.succ t.succ = Ramsey t.succ s.succ :=
+begin
+intros,
+apply nat.le_antisymm,
+have RamseyM := nat.Inf_mem (Ramsey_finite t s),
+apply nat.Inf_le,
+simp [Ramsey] at RamseyM ⊢,
+rw Ramsey_prop_symm at RamseyM,
+assumption,
+have RamseyN := nat.Inf_mem (Ramsey_finite s t),
+apply nat.Inf_le,
+simp [Ramsey] at RamseyN ⊢,
+rw Ramsey_prop_symm at RamseyN,
+assumption
+end
+
+theorem friendship_upper_bound_alt : Ramsey 3 3 ≤ 6 :=
+begin
+have R33 := Ramsey_ineq 1 1,
+rw [Ramsey_symm 2 1, Ramsey2] at R33,
+exact R33
+end
+
 theorem friendship : Ramsey 3 3 = 6 := sorry
