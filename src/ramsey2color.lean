@@ -546,9 +546,39 @@ simp [rat.add_def],
 change rat.mk 4 4 = 1,
 simp [← rat.mk_one_one, rat.mk_eq]; simp,
 simp [temp1, temp2],
-admit,
-
-have mp := missing_pigeonhole (exists.intro (0 : fin 2) _) (le_of_eq hgsum); try { simp },
+rcases (nat.exists_eq_succ_of_ne_zero (ne_of_gt NMpos.lt)) with ⟨O, Oprop⟩,
+have filterdisj : disjoint (finset.filter (λ (y : fin (N + M)), f ⟦(0, y)⟧ = 1)
+            ((complete_graph (fin (N + M))).neighbor_finset 0)) (finset.filter (λ (y : fin (N + M)), f ⟦(0, y)⟧ = 0)
+            ((complete_graph (fin (N + M))).neighbor_finset 0)),
+rw finset.disjoint_iff_ne,
+intros _ ainS _ binT,
+simp at ainS binT,
+intro aeqb,
+rw aeqb at ainS,
+cases eq.trans (eq.symm binT.right) ainS.right,
+rw [rat.coe_nat_eq_mk (finset.filter (λ (y : fin (N + M)), f ⟦(0, y)⟧ = 1)
+            ((complete_graph (fin (N + M))).neighbor_finset 0)).card, rat.coe_nat_eq_mk (finset.filter (λ (y : fin (N + M)), f ⟦(0, y)⟧ = 0)
+            ((complete_graph (fin (N + M))).neighbor_finset 0)).card],
+simp,
+rw ← int.coe_nat_add,
+rw ← finset.card_union_eq filterdisj,
+have seteq : (finset.filter (λ (y : fin (N + M)), f ⟦(0, y)⟧ = 1)
+              ((complete_graph (fin (N + M))).neighbor_finset 0) ∪
+            finset.filter (λ (y : fin (N + M)), f ⟦(0, y)⟧ = 0)
+              ((complete_graph (fin (N + M))).neighbor_finset 0))=((complete_graph (fin (N + M))).neighbor_finset 0),
+apply subset_antisymm; unfold has_subset.subset,
+intros _ ainset,
+simp at ainset ⊢,
+cases ainset with aprop aprop; exact aprop.left,
+intros _ ainset,
+simp at ainset ⊢,
+let fa := f ⟦(0, a)⟧,
+fin_cases fa; simp [← fa, this, ainset],
+rw [seteq, simple_graph.neighbor_finset_eq_filter],
+simp [complete_graph, finset.filter_ne, rat.coe_nat_eq_mk M, rat.coe_nat_eq_mk N],
+rw [← int.coe_nat_add M N,  nat.add_comm M N, ← rat.mk_one_one, rat.sub_def (ne_of_gt int.zero_lt_one) (ne_of_gt int.zero_lt_one)],
+simp [Oprop],
+have mp := missing_pigeonhole (exists.intro (0 : fin 2) _) (le_of_eq hgsum); simp,
 rcases mp with ⟨a, ainuniv, gha⟩,
 fin_cases a,
 simp [g, h] at gha,
