@@ -489,6 +489,21 @@ cases h a'.prop,
 simp [fa'],
 end
 
+lemma floormagic : ∀ (n m : ℕ) (q : ℚ), q < 1 → ↑n ≤ ⌊(↑m + q)⌋  → n ≤ m :=
+begin
+intros _ _ _ smallqat nlemfloor,
+rw  int.floor_nat_add at nlemfloor,
+have qflrle0 : ⌊q⌋ ≤ 0,
+by_contra qflrpos,
+simp at qflrpos,
+rw int.floor_pos at qflrpos,
+cases (lt_irrefl 1 (lt_of_le_of_lt qflrpos smallqat)),
+have mqlem := int.add_le_add_left qflrle0 ↑m,
+have nleqm := int.le_trans nlemfloor mqlem,
+simp at nleqm,
+exact nleqm
+end
+
 theorem Ramsey1_prop : ∀ N k : ℕ, Ramsey_prop N.succ 1 k :=
 begin
 intros,
@@ -540,18 +555,6 @@ simp [g, h] at gha,
 have NtoZ : (↑N:ℚ) = (↑N:ℤ) := by simp,
 rw NtoZ at gha,
 rw ← rat.le_floor at gha,
-have floormagic : ∀ (n m : ℕ) (q : ℚ), q < 1 → ↑n ≤ ⌊(↑m + q)⌋  → n ≤ m,
-intros _ _ _ smallqat nlemfloor,
-rw  int.floor_nat_add at nlemfloor,
-have qflrle0 : ⌊q⌋ ≤ 0,
-by_contra qflrpos,
-simp at qflrpos,
-rw int.floor_pos at qflrpos,
-cases (lt_irrefl 1 (lt_of_le_of_lt qflrpos smallqat)),
-have mqlem := int.add_le_add_left qflrle0 ↑m,
-have nleqm := int.le_trans nlemfloor mqlem,
-simp at nleqm,
-exact nleqm,
 have halflt1 : rat.mk_pnat 1 2 < 1 :=
 by simp [rat.lt_one_iff_num_lt_denom, rat.mk_pnat_num,
 rat.mk_pnat_denom];
