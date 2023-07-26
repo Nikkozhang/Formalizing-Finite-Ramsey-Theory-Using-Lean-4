@@ -770,3 +770,28 @@ exact R33
 end
 
 theorem friendship : Ramsey 3 3 = 6 := sorry
+
+theorem upperbound_from_ineq : ∀ s t : ℕ, Ramsey s.succ.succ t.succ.succ 
+≤ nat.choose (s.succ.succ + t.succ.succ - 2) (s.succ.succ - 1) :=
+begin
+intros,
+simp,
+
+induction s with s' ihp₁,
+simp [Ramsey2],
+
+induction t with t' ihp₂,
+rw Ramsey_symm,
+simp [Ramsey2],
+transitivity Ramsey s'.succ.succ t'.succ.succ.succ + Ramsey s'.succ.succ.succ t'.succ.succ,
+apply Ramsey_ineq s'.succ t'.succ, 
+suffices h :Ramsey s'.succ.succ t'.succ.succ ≤ (s'.succ.succ + t'.succ.succ - 2).choose s'.succ,
+simp [h] at ihp₂,
+transitivity (s'.succ.succ + t'.succ.succ.succ - 2).choose s'.succ + (s'.succ.succ.succ + t'.succ.succ - 2).choose s'.succ.succ,
+linarith only [ihp₁, ihp₂],
+have eq : s'.succ.succ + t'.succ.succ - 2 = s'.succ + t'.succ := by linarith,
+simp,
+apply nat.choose_succ_succ,
+
+sorry
+end
