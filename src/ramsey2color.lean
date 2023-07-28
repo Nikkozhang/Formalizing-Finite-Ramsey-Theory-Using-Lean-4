@@ -517,6 +517,24 @@ simp [simple_graph.is_clique_iff, set.pairwise],
 simp
 end
 
+theorem Ramsey1 : ∀ k : ℕ, Ramsey 1 k.succ = 1 :=
+begin
+intro,
+unfold Ramsey,
+have Ramsey1_monotone : ∀ M₁ M₂, M₁ ≤ M₂ → M₁ ∈ { N : ℕ | Ramsey_prop N 1 k.succ } 
+→ M₂ ∈ { N : ℕ | Ramsey_prop N 1 k.succ },
+intros M₁ M₂ M₁leM₂,
+simp,
+intro M₁Ramsey,
+apply Ramsey_monotone M₁Ramsey M₁leM₂,
+rewrite nat.Inf_upward_closed_eq_succ_iff (Ramsey1_monotone),
+simp,
+split,
+apply Ramsey1_prop 0 k.succ,
+unfold Ramsey_prop,
+simp,
+end
+
 theorem Ramsey_prop_ineq : ∀ N M s t : ℕ, Ramsey_prop N s.succ t.succ.succ → Ramsey_prop M s.succ.succ t.succ → Ramsey_prop (N + M) s.succ.succ t.succ.succ :=
 begin
 intros _ _ _ _ RamseyN RamseyM,
@@ -771,91 +789,52 @@ end
 
 theorem friendship : Ramsey 3 3 = 6 := sorry
 
-theorem upperbound_from_ineq : ∀ s t : ℕ, Ramsey s.succ.succ t.succ.succ 
-≤ nat.choose (s.succ.succ + t.succ.succ - 2) (s.succ.succ - 1) :=
-begin
-intros,
+-- theorem upperbound_from_ineq_additive : ∀ s t : ℕ, Ramsey s.succ.succ t.succ.succ 
+-- ≤ nat.choose (s.succ.succ + t.succ.succ - 2) (s.succ.succ - 1) :=
+-- begin
+-- suffices additive: ∀ m : ℕ, ∀ s t, m = s + t →  Ramsey s.succ.succ t.succ.succ 
+-- ≤ nat.choose (s.succ.succ + t.succ.succ - 2) (s.succ.succ - 1),
+-- intros,
+-- apply additive (s+t) s t,
+-- simp,
+-- intro,
+-- induction m with st ih,
+-- intros _ _ h,
+-- cases s; cases t,
+-- simp[Ramsey2],
+-- simp[Ramsey2],
+-- simp[Ramsey_symm, Ramsey2],
+-- rw[Ramsey_symm, Ramsey2],
+-- contradiction,
 
-induction s with s' ihp₁ generalizing t,
-simp [Ramsey2],
+-- intros _ _ h,
+-- cases s; cases t,
+-- simp[Ramsey2],
+-- simp[Ramsey2],
+-- simp[Ramsey_symm, Ramsey2],
+-- rw[Ramsey_symm, Ramsey2],
 
-induction t with t' ihp₂,
-rw Ramsey_symm,
-simp [Ramsey2],
-transitivity Ramsey s'.succ.succ t'.succ.succ.succ + Ramsey s'.succ.succ.succ t'.succ.succ,
-apply Ramsey_ineq s'.succ t'.succ, 
+-- transitivity Ramsey s.succ.succ t.succ.succ.succ + Ramsey s.succ.succ.succ t.succ.succ,
+-- apply Ramsey_ineq s.succ t.succ, 
 
-have temp₁: Ramsey s'.succ.succ t'.succ.succ.succ + Ramsey s'.succ.succ.succ t'.succ.succ
-≤ (s'.succ.succ + t'.succ.succ.succ - 2).choose s'.succ + (s'.succ.succ.succ + t'.succ.succ - 2).choose s'.succ.succ,
-apply add_le_add,
-exact ihp₁ t'.succ,
-exact ihp₂,
-have temp₂ :(s'.succ.succ.succ + t'.succ.succ.succ - 2).choose (s'.succ.succ.succ - 1) = 
-(s'.succ.succ + t'.succ.succ.succ - 2).choose s'.succ + (s'.succ.succ.succ + t'.succ.succ - 2).choose s'.succ.succ,
-simp [nat.succ_add],
-simp [ nat.add_succ,nat.choose_succ_succ],
-rw temp₂,
-exact temp₁,
-end
+-- have temp₁: Ramsey s.succ.succ t.succ.succ.succ + Ramsey s.succ.succ.succ t.succ.succ
+-- ≤ (s.succ.succ + t.succ.succ.succ - 2).choose s.succ + (s.succ.succ.succ + t.succ.succ - 2).choose s.succ.succ,
+-- apply add_le_add,
+-- apply ih s t.succ,
+-- simp [nat.succ_add] at h,
+-- exact h,
+-- apply ih s.succ t,
+-- simp [nat.add_succ] at h,
+-- exact h,
+-- have temp₂ :(s.succ.succ.succ + t.succ.succ.succ - 2).choose (s.succ.succ.succ - 1) = 
+-- (s.succ.succ + t.succ.succ.succ - 2).choose s.succ + (s.succ.succ.succ + t.succ.succ - 2).choose s.succ.succ,
+-- simp [nat.succ_add],
+-- simp [ nat.add_succ,nat.choose_succ_succ],
+-- rw temp₂,
+-- exact temp₁,
+-- end
 
-theorem upperbound_from_ineq_additive : ∀ s t : ℕ, Ramsey s.succ.succ t.succ.succ 
-≤ nat.choose (s.succ.succ + t.succ.succ - 2) (s.succ.succ - 1) :=
-begin
-suffices additive: ∀ m : ℕ, ∀ s t, m = s + t →  Ramsey s.succ.succ t.succ.succ 
-≤ nat.choose (s.succ.succ + t.succ.succ - 2) (s.succ.succ - 1),
-intros,
-apply additive (s+t) s t,
-simp,
-intro,
-induction m with st ih,
-intros _ _ h,
-cases s; cases t,
-simp[Ramsey2],
-simp[Ramsey2],
-simp[Ramsey_symm, Ramsey2],
-rw[Ramsey_symm, Ramsey2],
-contradiction,
-
-intros _ _ h,
-cases s; cases t,
-simp[Ramsey2],
-simp[Ramsey2],
-simp[Ramsey_symm, Ramsey2],
-rw[Ramsey_symm, Ramsey2],
-
-transitivity Ramsey s.succ.succ t.succ.succ.succ + Ramsey s.succ.succ.succ t.succ.succ,
-apply Ramsey_ineq s.succ t.succ, 
-
-have temp₁: Ramsey s.succ.succ t.succ.succ.succ + Ramsey s.succ.succ.succ t.succ.succ
-≤ (s.succ.succ + t.succ.succ.succ - 2).choose s.succ + (s.succ.succ.succ + t.succ.succ - 2).choose s.succ.succ,
-apply add_le_add,
-apply ih s t.succ,
-simp [nat.succ_add] at h,
-exact h,
-apply ih s.succ t,
-simp [nat.add_succ] at h,
-exact h,
-have temp₂ :(s.succ.succ.succ + t.succ.succ.succ - 2).choose (s.succ.succ.succ - 1) = 
-(s.succ.succ + t.succ.succ.succ - 2).choose s.succ + (s.succ.succ.succ + t.succ.succ - 2).choose s.succ.succ,
-simp [nat.succ_add],
-simp [ nat.add_succ,nat.choose_succ_succ],
-rw temp₂,
-exact temp₁,
-end
-
-theorem Ramsey1 : ∀ k : ℕ, Ramsey 1 k.succ = 1 :=
-begin
-intro,
-unfold Ramsey,
-let h_set := {N : ℕ | Ramsey_prop N 1 k.succ},
-have h: h_set.nonempty,
-use 1,
-simp,
-apply Ramsey1_prop 0 k.succ,
-sorry
-end
-
-theorem upperbound_from_ineq_stroger : ∀ s t : ℕ, Ramsey s.succ t.succ 
+theorem Ramsey_binomial_coefficient_ineq : ∀ s t : ℕ, Ramsey s.succ t.succ 
 ≤ nat.choose (s.succ + t.succ - 2) (s.succ - 1) :=
 begin
 intros,
@@ -875,10 +854,10 @@ have temp₁: Ramsey s'.succ t'.succ.succ + Ramsey s'.succ.succ t'.succ
 apply add_le_add,
 exact ihp₁ t'.succ,
 exact ihp₂,
+
 have temp₂ :(s'.succ.succ + t'.succ.succ - 2).choose (s'.succ.succ - 1) = 
-(s'.succ + t'.succ.succ - 2).choose s' + (s'.succ.succ + t'.succ - 2).choose s'.succ,
-simp [nat.succ_add],
-simp [ nat.add_succ,nat.choose_succ_succ],
+(s'.succ + t'.succ.succ - 2).choose s' + (s'.succ.succ + t'.succ - 2).choose s'.succ
+:= by simp [nat.succ_add, nat.add_succ,nat.choose_succ_succ],
 rw temp₂,
 exact temp₁,
 end
