@@ -796,7 +796,90 @@ simp [nat.succ_add],
 simp [ nat.add_succ,nat.choose_succ_succ],
 rw temp₂,
 exact temp₁,
+end
 
+theorem upperbound_from_ineq_additive : ∀ s t : ℕ, Ramsey s.succ.succ t.succ.succ 
+≤ nat.choose (s.succ.succ + t.succ.succ - 2) (s.succ.succ - 1) :=
+begin
+suffices additive: ∀ m : ℕ, ∀ s t, m = s + t →  Ramsey s.succ.succ t.succ.succ 
+≤ nat.choose (s.succ.succ + t.succ.succ - 2) (s.succ.succ - 1),
+intros,
+apply additive (s+t) s t,
+simp,
+intro,
+induction m with st ih,
+intros _ _ h,
+cases s; cases t,
+simp[Ramsey2],
+simp[Ramsey2],
+simp[Ramsey_symm, Ramsey2],
+rw[Ramsey_symm, Ramsey2],
+contradiction,
+
+intros _ _ h,
+cases s; cases t,
+simp[Ramsey2],
+simp[Ramsey2],
+simp[Ramsey_symm, Ramsey2],
+rw[Ramsey_symm, Ramsey2],
+
+transitivity Ramsey s.succ.succ t.succ.succ.succ + Ramsey s.succ.succ.succ t.succ.succ,
+apply Ramsey_ineq s.succ t.succ, 
+
+have temp₁: Ramsey s.succ.succ t.succ.succ.succ + Ramsey s.succ.succ.succ t.succ.succ
+≤ (s.succ.succ + t.succ.succ.succ - 2).choose s.succ + (s.succ.succ.succ + t.succ.succ - 2).choose s.succ.succ,
+apply add_le_add,
+apply ih s t.succ,
+simp [nat.succ_add] at h,
+exact h,
+apply ih s.succ t,
+simp [nat.add_succ] at h,
+exact h,
+have temp₂ :(s.succ.succ.succ + t.succ.succ.succ - 2).choose (s.succ.succ.succ - 1) = 
+(s.succ.succ + t.succ.succ.succ - 2).choose s.succ + (s.succ.succ.succ + t.succ.succ - 2).choose s.succ.succ,
+simp [nat.succ_add],
+simp [ nat.add_succ,nat.choose_succ_succ],
+rw temp₂,
+exact temp₁,
+end
+
+theorem Ramsey1 : ∀ k : ℕ, Ramsey 1 k.succ = 1 :=
+begin
+intro,
+unfold Ramsey,
+let h_set := {N : ℕ | Ramsey_prop N 1 k.succ},
+have h: h_set.nonempty,
+use 1,
+simp,
+apply Ramsey1_prop 0 k.succ,
 sorry
+end
+
+theorem upperbound_from_ineq_stroger : ∀ s t : ℕ, Ramsey s.succ t.succ 
+≤ nat.choose (s.succ + t.succ - 2) (s.succ - 1) :=
+begin
+intros,
+
+induction s with s' ihp₁ generalizing t,
+simp,
+rw Ramsey1 t,
+
+induction t with t' ihp₂,
+rw Ramsey_symm,
+simp [Ramsey1 s'.succ],
+transitivity Ramsey s'.succ t'.succ.succ + Ramsey s'.succ.succ t'.succ,
+apply Ramsey_ineq s' t', 
+
+have temp₁: Ramsey s'.succ t'.succ.succ + Ramsey s'.succ.succ t'.succ
+≤ (s'.succ + t'.succ.succ - 2).choose s' + (s'.succ.succ + t'.succ - 2).choose s'.succ,
+apply add_le_add,
+exact ihp₁ t'.succ,
+exact ihp₂,
+have temp₂ :(s'.succ.succ + t'.succ.succ - 2).choose (s'.succ.succ - 1) = 
+(s'.succ + t'.succ.succ - 2).choose s' + (s'.succ.succ + t'.succ - 2).choose s'.succ,
+simp [nat.succ_add],
+simp [ nat.add_succ,nat.choose_succ_succ],
+rw temp₂,
+exact temp₁,
 end
 
