@@ -775,9 +775,8 @@ theorem upperbound_from_ineq : ∀ s t : ℕ, Ramsey s.succ.succ t.succ.succ
 ≤ nat.choose (s.succ.succ + t.succ.succ - 2) (s.succ.succ - 1) :=
 begin
 intros,
-simp,
 
-induction s with s' ihp₁,
+induction s with s' ihp₁ generalizing t,
 simp [Ramsey2],
 
 induction t with t' ihp₂,
@@ -785,13 +784,19 @@ rw Ramsey_symm,
 simp [Ramsey2],
 transitivity Ramsey s'.succ.succ t'.succ.succ.succ + Ramsey s'.succ.succ.succ t'.succ.succ,
 apply Ramsey_ineq s'.succ t'.succ, 
-suffices h :Ramsey s'.succ.succ t'.succ.succ ≤ (s'.succ.succ + t'.succ.succ - 2).choose s'.succ,
-simp [h] at ihp₂,
-transitivity (s'.succ.succ + t'.succ.succ.succ - 2).choose s'.succ + (s'.succ.succ.succ + t'.succ.succ - 2).choose s'.succ.succ,
-linarith only [ihp₁, ihp₂],
-have eq : s'.succ.succ + t'.succ.succ - 2 = s'.succ + t'.succ := by linarith,
-simp,
-apply nat.choose_succ_succ,
+
+have temp₁: Ramsey s'.succ.succ t'.succ.succ.succ + Ramsey s'.succ.succ.succ t'.succ.succ
+≤ (s'.succ.succ + t'.succ.succ.succ - 2).choose s'.succ + (s'.succ.succ.succ + t'.succ.succ - 2).choose s'.succ.succ,
+apply add_le_add,
+exact ihp₁ t'.succ,
+exact ihp₂,
+have temp₂ :(s'.succ.succ.succ + t'.succ.succ.succ - 2).choose (s'.succ.succ.succ - 1) = 
+(s'.succ.succ + t'.succ.succ.succ - 2).choose s'.succ + (s'.succ.succ.succ + t'.succ.succ - 2).choose s'.succ.succ,
+simp [nat.succ_add],
+simp [ nat.add_succ,nat.choose_succ_succ],
+rw temp₂,
+exact temp₁,
 
 sorry
 end
+
