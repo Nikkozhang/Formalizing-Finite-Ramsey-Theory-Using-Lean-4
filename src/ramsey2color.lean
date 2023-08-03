@@ -297,7 +297,7 @@ simp [vector.nth],
 sorry
 end
 
-lemma missing_pigeonhole {α : Type} [decidable_eq α] : ∀ {s : finset α}, finset.nonempty s → ∀ {f g : α → ℚ}, s.sum f ≤ s.sum g → ∃ a : α, a ∈ s ∧ f a ≤ g a :=
+lemma missing_pigeonhole {α β : Type} [decidable_eq α] [linear_ordered_semiring β] : ∀ {s : finset α}, finset.nonempty s → ∀ {f g : α → β}, s.sum f ≤ s.sum g → ∃ a : α, a ∈ s ∧ f a ≤ g a :=
 begin
 intros _ sne _ _ fgsum,
 induction s using finset.induction with a t anotint ih,
@@ -422,6 +422,17 @@ have mqlem := int.add_le_add_left qflrle0 ↑m,
 have nleqm := int.le_trans nlemfloor mqlem,
 simp at nleqm,
 exact nleqm
+end
+
+lemma xor_even_le_implies_lt : ∀ {m n : ℕ}, xor (even m) (even n) → m ≤ n → m < n :=
+begin
+intros _ _ xoreven mlen,
+cases xoreven; {
+rw le_iff_lt_or_eq at mlen,
+cases mlen,
+exact mlen,
+simp [mlen] at xoreven,
+cases xoreven }
 end
 
 theorem Ramsey₂1_prop : ∀ N k : ℕ, Ramsey₂_prop N.succ 1 k :=
@@ -618,6 +629,93 @@ rat.mk_pnat_denom];
 linarith,
 have MleqNeighbor0 := floormagic M (monochromatic_vicinity (complete_graph (fin (M + N))) 0 f 0).card (rat.mk_nat 1 2) halflt1 gha,
 have cliquecases := monochromatic_vicinity_Ramsey 0 f 0 ⟨[s.succ, t.succ.succ], by simp⟩ (Ramsey_monotone RamseyM MleqNeighbor0),
+cases cliquecases,
+cases cliquecases with S Sclique,
+use [S, 0],
+exact Sclique,
+rcases cliquecases with ⟨i, ⟨S, Sclique⟩⟩,
+use [S, 1],
+have ieq1 := notc Sclique.left (fin.succ_ne_zero 0),
+simp [ieq1] at Sclique,
+exact Sclique,
+
+sorry
+
+end
+
+theorem Ramsey₂_prop_strict_ineq : ∀ M N s t : ℕ, even M → even N → Ramsey₂_prop M s.succ t.succ.succ → Ramsey₂_prop N s.succ.succ t.succ → Ramsey₂_prop (M + N).pred s.succ.succ t.succ.succ :=
+begin
+intros _ _ _ _ evenM evenN RamseyM RamseyN,
+rcases (nat.exists_eq_succ_of_ne_zero (ne.symm (ne_of_lt RamseyM.left))) with ⟨M', rfl⟩,
+rcases (nat.exists_eq_succ_of_ne_zero (ne.symm (ne_of_lt RamseyN.left))) with ⟨N', rfl⟩,
+simp [nat.succ_add, nat.add_succ],
+unfold Ramsey₂_prop Ramsey_prop,
+split,
+simp,
+intro,
+let g : fin 2 → ℕ := (λ x, 2 * (finset.filter (λ e, f e = x) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset).card),
+let h : fin 2 → ℕ := ![(M' + N').succ * M', (M' + N').succ * N'],
+have hgsum : finset.univ.sum h = finset.univ.sum g,
+have univexpand : (@finset.univ (fin 2) _) = {0, 1},
+symmetry,
+rw finset.eq_univ_iff_forall,
+intros,
+fin_cases x; simp,
+rw univexpand,
+simp [h, g],
+rw [← nat.left_distrib, ← nat.left_distrib],
+have filterdisj : disjoint (finset.filter (λ e, f e = 0) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset) (finset.filter (λ e, f e = 1) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset) := sorry,
+rw ← finset.card_union_eq filterdisj,
+have seteq : (finset.filter (λ (e : sym2 (fin (M' + N').succ)), f e = 0) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset ∪ finset.filter (λ (e : sym2 (fin (M' + N').succ)), f e = 1) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset) = (⊤ : simple_graph (fin (M' + N').succ)).edge_finset := sorry,
+rw [seteq, ← simple_graph.sum_degrees_eq_twice_card_edges],
+simp,
+have mp := missing_pigeonhole (exists.intro (0 : fin 2) (finset.mem_univ (0 : fin 2))) (nat.le_of_eq hgsum),
+rcases mp with ⟨a, ainuniv, gha⟩,
+have cardodd : odd (M' + N').succ := sorry,
+fin_cases a; simp [g, h] at gha,
+
+have evenrhs : even (2 * (finset.filter (λ (e : sym2 (fin (M' + N').succ)), f e = 0) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset).card) := by simp,
+have xoreven : xor (even ((M' + N').succ * M')) (even (2 * (finset.filter (λ (e : sym2 (fin (M' + N').succ)), f e = 0) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset).card)),
+right,
+simp,
+rw [← nat.add_one, nat.even_add_one, ← nat.odd_iff_not_even] at evenM,
+have oddlhs := nat.odd_mul.mpr ⟨cardodd, evenM⟩,
+simp at oddlhs,
+exact oddlhs,
+have ghalt := xor_even_le_implies_lt xoreven gha,
+have dblcnt : 2 * (finset.filter (λ (e : sym2 (fin (M' + N').succ)), f e = 0) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset).card = (finset.filter (λ (x : (⊤ : simple_graph (fin (M' + N').succ)).dart), f ⟦x.to_prod⟧ = 0) finset.univ).card := sorry,
+rw dblcnt at ghalt,
+have pghineq : (@finset.univ (fin (M' + N').succ) _).card • M' < ↑((finset.filter (λ (x : (⊤ : simple_graph (fin (M' + N').succ)).dart), f ⟦x.to_prod⟧ = 0) finset.univ).card) := by simp [ghalt],
+have pgh := finset.exists_lt_card_fiber_of_mul_lt_card_of_maps_to (λ (e : (⊤ : simple_graph (fin (M' + N').succ)).dart) _, finset.mem_univ e.snd) pghineq,
+rcases pgh with ⟨v, vmem, vprop⟩,
+simp at vprop,
+have cardeq : (finset.filter (λ (x : (⊤ : simple_graph (fin (M' + N').succ)).dart), x.to_prod.snd = v)
+       (finset.filter (λ (x : (⊤ : simple_graph (fin (M' + N').succ)).dart), f ⟦x.to_prod⟧ = 0) finset.univ)).card = (monochromatic_vicinity (⊤ : simple_graph (fin (M' + N').succ)) v f 0).card,
+apply finset.card_congr (λ (a : (⊤ : simple_graph (fin (M' + N').succ)).dart) ainS, a.fst),
+intro,
+simp [monochromatic_vicinity],
+intros f0 asndv,
+split,
+intro afstv,
+have aprop := a.is_adj,
+simp [asndv, ← afstv] at aprop,
+exact aprop,
+simp [sym2.eq_swap, ← asndv],
+exact f0,
+intros _ _,
+simp,
+intros fa asndv fb bsndv abfst,
+rw simple_graph.dart.ext_iff,
+rw prod.ext_iff,
+simp [abfst, asndv, bsndv],
+intro,
+simp [monochromatic_vicinity],
+intros bnotv fvb0,
+use (b, v); simp,
+tauto,
+simp [sym2.eq_swap, fvb0],
+rw cardeq at vprop,
+have cliquecases := monochromatic_vicinity_Ramsey v f 0 ⟨[s.succ, t.succ.succ], by simp⟩ (Ramsey_monotone RamseyM vprop),
 cases cliquecases,
 cases cliquecases with S Sclique,
 use [S, 0],
