@@ -9,8 +9,8 @@ import tactic.induction
 
 import .pick_tactic
 
-def graph_at_color {N : ℕ} (G : simple_graph (fin N)) (ϕ : sym2 (fin N) → fin 2)
- (i : fin 2): simple_graph (fin N) := {
+def graph_at_color {N k : ℕ} (G : simple_graph (fin N)) (ϕ : sym2 (fin N) → fin k)
+ (i : fin k): simple_graph (fin N) := {
   adj := λ u v, (G.adj u v) ∧ (ϕ ⟦(u, v)⟧ = i),
   symm := begin
   unfold symmetric,
@@ -28,100 +28,66 @@ def graph_at_color {N : ℕ} (G : simple_graph (fin N)) (ϕ : sym2 (fin N) → f
   end,
  }
 
-def Ramsey_prop (N s t : ℕ) : Prop := N > 0 ∧
-∀ f : sym2 (fin N) → fin 2, 
-(∃ S, (graph_at_color (complete_graph (fin N)) f 0).is_n_clique s S) 
-∨ (∃ T, (graph_at_color (complete_graph (fin N)) f 1).is_n_clique t T)
+def Ramsey_prop (N k : ℕ) (s : vector ℕ k) : Prop := N > 0 ∧
+∀ f : sym2 (fin N) → fin k,
+(∃ S i, (graph_at_color (complete_graph (fin N)) f i).is_n_clique (s.nth i) S) 
 
-lemma Ramsey_monotone : ∀ {N s t}, Ramsey_prop N s t → ∀ {M}, N ≤ M 
-→ Ramsey_prop M s t :=
+def Ramsey₂_prop (N s t : ℕ) : Prop := Ramsey_prop N 2 ⟨[s, t], by simp⟩
+
+lemma Ramsey_monotone : ∀ {N k s}, Ramsey_prop N k s → ∀ {M}, N ≤ M 
+→ Ramsey_prop M k s :=
 begin
 unfold Ramsey_prop,
 intros _ _ _ R _ NleqM,
-rcases R with ⟨ Ngt0, R⟩,
-split, 
+rcases R with ⟨Ngt0, R⟩,
+split,
 linarith only[Ngt0, NleqM],
 intros,
-let f' : sym2 (fin N) → fin 2 := λ e, f (sym2.map (fin.cast_le NleqM) e),
-cases (R f'),
-rcases h with ⟨S, Sprop⟩,
-cases Sprop,
-left,
-use (finset.map (fin.cast_le NleqM).to_embedding S),
-have cliqueproof : (graph_at_color (complete_graph (fin M)) f 0).is_clique 
-(finset.map (fin.cast_le NleqM).to_embedding S),
-simp [simple_graph.is_clique_iff, set.pairwise, graph_at_color] at Sprop_clique ⊢,
-intros x xinS y yinS xneqy,
-split,
-exact xneqy,
-have fxy := (Sprop_clique xinS yinS xneqy).right,
-exact fxy,
-rw ← (finset.card_map (fin.cast_le NleqM).to_embedding) at Sprop_card_eq,
-use { clique := cliqueproof, card_eq := Sprop_card_eq },
-
-rcases h with ⟨T, Tprop⟩,
-cases Tprop,
-right,
-use (finset.map (fin.cast_le NleqM).to_embedding T),
-have cliqueproof : (graph_at_color (complete_graph (fin M)) f 1).is_clique 
-(finset.map (fin.cast_le NleqM).to_embedding T),
-simp [simple_graph.is_clique_iff, set.pairwise, graph_at_color] at Tprop_clique ⊢,
-intros x xinT y yinT xneqy,
-split,
-exact xneqy,
-have fxy := (Tprop_clique xinT yinT xneqy).right,
-exact fxy,
-rw ← (finset.card_map (fin.cast_le NleqM).to_embedding) at Tprop_card_eq,
-use { clique := cliqueproof, card_eq := Tprop_card_eq },
+let f' : sym2 (fin N) → fin k := λ e, f (sym2.map (fin.cast_le NleqM) e),
+cases (R f') with S Sprop,
+rcases Sprop with ⟨i, Sclique, Scard⟩,
+use [finset.map (fin.cast_le NleqM).to_embedding S, i],
+constructor,
+simp [graph_at_color, simple_graph.is_clique_iff, set.pairwise] at Sclique ⊢,
+intros _ ainS b binS aneqb,
+have ScliqueMap := Sclique ainS binS aneqb,
+simp [f'] at ScliqueMap,
+exact ScliqueMap,
+simp [Scard]
 end
 
-
-theorem Ramsey_prop_symm : ∀ N s t : ℕ, Ramsey_prop N s t ↔ Ramsey_prop N t s :=
+theorem Ramsey₂_prop_symm : ∀ N s t, Ramsey₂_prop N s t ↔ Ramsey₂_prop N t s :=
 begin
-have helper : ∀ N s t, Ramsey_prop N s t → Ramsey_prop N t s,
-unfold Ramsey_prop,
-intros _ _ _ R,
-rcases R with ⟨Ngt0, R⟩,
+have helper : ∀ N s t, Ramsey₂_prop N s t → Ramsey₂_prop N t s,
+simp [Ramsey₂_prop, Ramsey_prop],
+intros _ _ _ Ngt0 R,
 split,
 exact Ngt0,
 intro,
 let f' : sym2 (fin N) → fin 2 := λ e, if f e = 0 then 1 else 0,
-cases (R f'),
-rcases h with ⟨S, ⟨Sclique, Scard⟩⟩,
-right,
+cases (R f') with S Sprop,
+rcases Sprop with ⟨i, ⟨Sclique, Scard⟩⟩,
 use S,
-have cliqueproof : (graph_at_color (complete_graph (fin N)) f 1).is_clique S,
+fin_cases i,
+use 1,
+simp [f', vector.nth] at Sclique Scard ⊢,
+constructor,
 simp [simple_graph.is_clique_iff, set.pairwise, graph_at_color] at Sclique ⊢,
 intros _ xinS _ yinS xneqy,
-split,
-exact xneqy,
 have fxyneq0 := (Sclique xinS yinS xneqy).right,
-let e := f⟦(x, y)⟧, change e = 1,
-fin_cases e,contradiction,assumption,
-rw simple_graph.is_n_clique_iff,
-split,assumption, assumption,
-
-rcases h with ⟨T, ⟨Tclique, Tcard⟩⟩,
-left,
-use T,
-have cliqueproof : (graph_at_color (complete_graph (fin N)) f 0).is_clique T,
-simp [simple_graph.is_clique_iff, set.pairwise, graph_at_color] at Tclique ⊢,
-intros _ xinT _ yinT xneqy,
-split,
-exact xneqy,
-have fxyneq1 := (Tclique xinT yinT xneqy).right,
-by_contra, 
-apply fxyneq1 h,
-rw simple_graph.is_n_clique_iff,
-split,assumption, assumption,
-
-intros,
-use ⟨helper N s t, helper N t s⟩,
+let fxy := f ⟦(x, y)⟧,
+fin_cases fxy,
+simp [fxy, ← this] at fxyneq0,
+cases fxyneq0,
+simp [xneqy, ← fxy, this],
+assumption,
+use 0,
+sorry,
 end
 
-theorem friendship_upper_bound : Ramsey_prop 6 3 3 :=
+theorem friendship_upper_bound : Ramsey₂_prop 6 3 3 :=
 begin
-unfold Ramsey_prop,
+unfold Ramsey₂_prop Ramsey_prop,
 split,
 simp,
 intros,
@@ -235,7 +201,6 @@ rw [h_1, h_2],
 contradiction,
 contradiction,
 
-
 have temp1: f ⟦(↑x, ↑y)⟧ = f ⟦(↑y, ↑z)⟧ := notc fxyneqc fyzneqc,
 have temp2: f ⟦(↑x, ↑y)⟧ = f ⟦(↑x, ↑z)⟧:= notc fxyneqc fxzneqc,
 have d0 :(graph_at_color (complete_graph (fin 6)) f  (f ⟦(↑x, ↑y)⟧)) .is_n_clique 3 {↑x, ↑ y, ↑ z},
@@ -283,38 +248,32 @@ assumption,
 
 end
 
-noncomputable def Ramsey (s t : ℕ) : ℕ := Inf { N : ℕ | Ramsey_prop N s t }
+noncomputable def Ramsey₂ (s t : ℕ) : ℕ := Inf { N : ℕ | Ramsey₂_prop N s t }
 
-theorem Ramsey2 : ∀ k : ℕ, Ramsey 2 k.succ = k.succ :=
+theorem Ramsey₂2 : ∀ k : ℕ, Ramsey₂ 2 k.succ = k.succ :=
 begin
 intros,
-unfold Ramsey,
-have Ramsey2_monotone : ∀ M₁ M₂, M₁ ≤ M₂ → M₁ ∈ { N : ℕ | Ramsey_prop N 2 k.succ } 
-→ M₂ ∈ { N : ℕ | Ramsey_prop N 2 k.succ },
+unfold Ramsey₂,
+have Ramsey₂2_monotone : ∀ M₁ M₂, M₁ ≤ M₂ → M₁ ∈ { N : ℕ | Ramsey₂_prop N 2 k.succ } 
+→ M₂ ∈ { N : ℕ | Ramsey₂_prop N 2 k.succ },
 intros M₁ M₂ M₁leM₂,
 simp,
 intro M₁Ramsey,
 apply Ramsey_monotone M₁Ramsey M₁leM₂,
-rewrite nat.Inf_upward_closed_eq_succ_iff (Ramsey2_monotone),
+rewrite nat.Inf_upward_closed_eq_succ_iff (Ramsey₂2_monotone),
 simp,
 split,
-unfold Ramsey_prop,
-split,
-simp,
+simp [Ramsey₂_prop, Ramsey_prop],
 intros,
 cases finset.eq_empty_or_nonempty (finset.filter 
 (λ (x : sym2 (fin k.succ)), (x.out.1 ≠ x.out.2) ∧ f x = 0) finset.univ),
 rw finset.filter_eq_empty_iff at h,
 simp at h,
-right,
 use finset.univ,
-have cliqueproof : (graph_at_color (complete_graph (fin (k + 1))) f 1).is_clique
- (fintype.elems (fin k.succ)),
-rw simple_graph.is_clique_iff,
-simp [set.pairwise, graph_at_color],
-intros x xin y yin xneqy,
-split,
-exact xneqy,
+use 1,
+constructor,
+simp [graph_at_color, vector.nth, simple_graph.is_clique_iff, set.pairwise],
+intros _ _ xneqy,
 let fxy := f ⟦(x, y)⟧,
 fin_cases fxy using fxyval,
 simp [fxy] at fxyval,
@@ -323,58 +282,23 @@ cases h ⟦(x, y)⟧ xyoutneq fxyval,
 rw ← sym2.is_diag_iff_proj_eq at xyouteq,
 simp at xyouteq,
 contradiction,
-simp [← fxy, fxyval],
-have cardproof : (fintype.elems (fin k.succ)).card = k.succ,
-change finset.univ.card = k.succ,
-simp,
-use { clique := cliqueproof, card_eq := cardproof },
-rw finset.filter_nonempty_iff at h,
-rcases h with ⟨e, ein, ⟨fxynoloop, fe0⟩⟩,
-left,
-use (insert e.out.1 (insert e.out.2 finset.empty)),
-have cliqueproof : (graph_at_color (complete_graph (fin (k + 1))) f 0).is_clique 
-(insert e.out.fst (insert e.out.snd ∅)),
-rw simple_graph.is_clique_iff,
-simp [set.pairwise, graph_at_color],
+simp [← fxy, fxyval, xneqy],
+simp [vector.nth],
+cases h with e eprop,
+simp at eprop,
+use [{e.out.fst, e.out.snd}, 0],
+constructor,
+simp [simple_graph.is_clique_iff, graph_at_color, set.pairwise],
 split,
 intro h,
-split; assumption,
+exact eprop,
 intro h,
-rw [sym2.eq_swap, prod.mk.eta, e.out_eq],
-split; assumption,
-rw simple_graph.is_n_clique_iff,
-simp,
+simp [sym2.eq_swap],
 split,
-exact cliqueproof,
-rw finset.card_eq_two,
-use [(quotient.out e).fst, (quotient.out e).snd],
-tauto,
-unfold Ramsey_prop,
-simp,
-intro,
-let f : sym2 (fin k) → fin 2 := λ e, 1,
-use f,
-intro h,
-cases h,
-rcases h with ⟨ S, S_prop ⟩,
-
-rw simple_graph.is_n_clique_iff at S_prop,
-rcases S_prop with ⟨SisClique,S_card⟩,
-unfold graph_at_color at SisClique,
-simp [simple_graph.is_clique_iff, set.pairwise, graph_at_color] at SisClique,
-rw finset.card_eq_two at S_card,
-rcases S_card with ⟨x,y,⟨xneqy,Sxy⟩ ⟩  ,
-have xins : x ∈ S := by rw Sxy; simp,
-have yins : y ∈ S := by rw Sxy; simp,
-exact SisClique xins yins xneqy,
-
-rcases h with ⟨T,TisClique⟩,
-have kcard : fintype.card (fin k) < k.succ := by simp; apply nat.le_refl,
-have cliquefree : (graph_at_color (complete_graph (fin k)) f 1).clique_free k.succ := 
-by apply simple_graph.clique_free_of_card_lt kcard,
-unfold simple_graph.clique_free at cliquefree,
-have Tcontra :=  cliquefree T,
-contradiction,
+exact h,
+exact eprop.right,
+simp [vector.nth],
+sorry
 end
 
 lemma missing_pigeonhole {α : Type} [decidable_eq α] : ∀ {s : finset α}, finset.nonempty s → ∀ {f g : α → ℚ}, s.sum f ≤ s.sum g → ∃ a : α, a ∈ s ∧ f a ≤ g a :=
@@ -504,25 +428,23 @@ simp at nleqm,
 exact nleqm
 end
 
-theorem Ramsey1_prop : ∀ N k : ℕ, Ramsey_prop N.succ 1 k :=
+theorem Ramsey₂1_prop : ∀ N k : ℕ, Ramsey₂_prop N.succ 1 k :=
 begin
 intros,
-unfold Ramsey_prop,
-simp,
+simp [Ramsey₂_prop, Ramsey_prop],
 intros,
-left,
-use {0},
+use [{0}, 0],
 constructor,
 simp [simple_graph.is_clique_iff, set.pairwise],
-simp
+simp [vector.nth]
 end
 
-theorem Ramsey1 : ∀ k : ℕ, Ramsey 1 k.succ = 1 :=
+theorem Ramsey₂1 : ∀ k : ℕ, Ramsey₂ 1 k.succ = 1 :=
 begin
 intro,
-unfold Ramsey,
-have Ramsey1_monotone : ∀ M₁ M₂, M₁ ≤ M₂ → M₁ ∈ { N : ℕ | Ramsey_prop N 1 k.succ } 
-→ M₂ ∈ { N : ℕ | Ramsey_prop N 1 k.succ },
+simp [Ramsey₂],
+have Ramsey1_monotone : ∀ M₁ M₂, M₁ ≤ M₂ → M₁ ∈ { N : ℕ | Ramsey₂_prop N 1 k.succ } 
+→ M₂ ∈ { N : ℕ | Ramsey₂_prop N 1 k.succ },
 intros M₁ M₂ M₁leM₂,
 simp,
 intro M₁Ramsey,
@@ -530,16 +452,15 @@ apply Ramsey_monotone M₁Ramsey M₁leM₂,
 rewrite nat.Inf_upward_closed_eq_succ_iff (Ramsey1_monotone),
 simp,
 split,
-apply Ramsey1_prop 0 k.succ,
-unfold Ramsey_prop,
-simp,
+apply Ramsey₂1_prop 0 k.succ,
+simp [Ramsey₂_prop, Ramsey_prop]
 end
 
-theorem Ramsey_prop_ineq : ∀ M N s t : ℕ, Ramsey_prop M s.succ t.succ.succ → Ramsey_prop N s.succ.succ t.succ → Ramsey_prop (M + N) s.succ.succ t.succ.succ :=
+theorem Ramsey₂_prop_ineq : ∀ M N s t : ℕ, Ramsey₂_prop M s.succ t.succ.succ → Ramsey₂_prop N s.succ.succ t.succ → Ramsey₂_prop (M + N) s.succ.succ t.succ.succ :=
 begin
 intros _ _ _ _ RamseyM RamseyN,
 have NMpos : M + N > 0 := by simp [nat.add_lt_add RamseyM.left RamseyN.left],
-unfold Ramsey_prop,
+unfold Ramsey₂_prop Ramsey_prop,
 split,
 assumption,
 intro,
@@ -616,7 +537,7 @@ simp at ftrans,
 cases ftrans,
 have absurd := (finset.card_eq_zero.mpr ftrans.right),
 simp [absurd] at MleqNeighbor0,
-unfold Ramsey_prop at RamseyM,
+unfold Ramsey₂_prop Ramsey_prop at RamseyM,
 simp [MleqNeighbor0] at RamseyM,
 cases RamseyM,
 rcases ftrans with ⟨ftrans, ftransbij⟩,
@@ -628,11 +549,11 @@ simp at a₁a₂eq,
 exact a₁a₂eq,
 let ftransemb : function.embedding (fin (finset.filter (λ (y : fin (M + N)), f ⟦(0, y)⟧ = 0) ((complete_graph (fin (M + N))).neighbor_finset 0)).card) (fin (M + N)) := ⟨λ x, ↑(ftrans ⟨x, finset.mem_univ x⟩), ftransembinj⟩,
 unfold Ramsey_prop at RamseySub,
-cases RamseySub.right (λ e, f ⟦(ftrans ⟨e.out.1, _⟩, ftrans ⟨e.out.2, _⟩)⟧) with clique clique; continue { clear RamseySub, simp },
+rcases RamseySub.right (λ e, f ⟦(ftrans ⟨e.out.1, finset.mem_univ e.out.1⟩, ftrans ⟨e.out.2, finset.mem_univ e.out.2⟩)⟧) with ⟨S, i, Sclique⟩,
 
-rcases clique with ⟨S, Sclique⟩,
-left,
-use (insert 0 (S.map ftransemb)),
+fin_cases i,
+
+use [insert 0 (S.map ftransemb), 0],
 constructor,
 simp [simple_graph.is_clique_iff, set.pairwise, graph_at_color],
 split,
@@ -672,144 +593,17 @@ have ftransat := (ftrans ⟨a, finset.mem_univ a⟩).prop,
 simp [ftransa] at ftransat,
 exact ftransat,
 rw finset.card_insert_of_not_mem znotinSmap,
-simp [Sclique.card_eq],
+simp [Sclique.card_eq, vector.head],
 
-rcases clique with ⟨T, Tclique⟩,
-right,
-use (T.map ftransemb),
-constructor,
-simp [simple_graph.is_clique_iff, set.pairwise, graph_at_color],
-intros _ ainT b binT ftransneq,
-have ftransaprop := (ftrans ⟨a, finset.mem_univ a⟩).prop,
-simp at ftransaprop,
-simp [ftransneq],
-simp [simple_graph.is_clique_iff, set.pairwise, graph_at_color] at Tclique,
-cases (fin.decidable_eq _ a b) with aneqb aeqb,
-have abedge := Tclique.clique ainT binT aneqb,
-simp at abedge,
-cases' quotient.mk_out (a, b),
-rw ← cases_eq at abedge,
-simp at abedge,
-exact abedge.right,
-rw ← cases_eq at abedge,
-simp at abedge,
-rw [sym2.eq_swap],
-exact abedge.right,
-rw ← @subtype.mk_eq_mk (fin (finset.filter (λ (y : fin (M + N)), f ⟦(0, y)⟧ = 0) ((complete_graph (fin (M + N))).neighbor_finset 0)).card) (λ x, x ∈ finset.univ) a (finset.mem_univ a) b (finset.mem_univ b) at aeqb,
-have ftranseq := congr_arg ftrans aeqb,
-rw subtype.ext_iff at ftranseq,
-cases ftransneq ftranseq,
-simp [Tclique.card_eq],
-
-simp [g, h] at gha,
-have NtoZ : (↑N:ℚ) = (↑N:ℤ) := by simp,
-rw NtoZ at gha,
-rw ← rat.le_floor at gha,
-have halflt1 : rat.mk_pnat 1 2 < 1 :=
-by simp [rat.lt_one_iff_num_lt_denom, rat.mk_pnat_num,
-rat.mk_pnat_denom];
-linarith,
-have NleqNeighbor0 := floormagic N ((finset.filter (λ (y : fin (M + N)), f ⟦(0, y)⟧ = 1)
-             ((complete_graph (fin (M + N))).neighbor_finset 0)).card) (rat.mk_nat 1 2) halflt1 gha,
-have RamseySub := Ramsey_monotone RamseyN NleqNeighbor0,
-have cardeq : (finset.card (@finset.univ (fin (finset.filter (λ (y : fin (M + N)), f ⟦(0, y)⟧ = 1) ((complete_graph (fin (M + N))).neighbor_finset 0)).card) _)) = (finset.filter (λ (y : fin (M + N)), f ⟦(0, y)⟧ = 1) ((complete_graph (fin (M + N))).neighbor_finset 0)).card := by simp,
-have ftrans := bijection_of_eq_card cardeq,
-simp at ftrans,
-cases ftrans,
-have absurd := (finset.card_eq_zero.mpr ftrans.right),
-simp [absurd] at NleqNeighbor0,
-unfold Ramsey_prop at RamseyN,
-simp [NleqNeighbor0] at RamseyN,
-cases RamseyN,
-rcases ftrans with ⟨ftrans, ftransbij⟩,
-have ftransembinj : function.injective ((λ x, ↑(ftrans ⟨x, finset.mem_univ x⟩)):(fin (finset.filter (λ (y : fin (M + N)), f ⟦(0, y)⟧ = 1) ((complete_graph (fin (M + N))).neighbor_finset 0)).card → fin (M + N))),
-intros _ _ fa₁a₂,
-simp at fa₁a₂,
-have a₁a₂eq := ftransbij.left (subtype.ext fa₁a₂),
-simp at a₁a₂eq,
-exact a₁a₂eq,
-let ftransemb : function.embedding (fin (finset.filter (λ (y : fin (M + N)), f ⟦(0, y)⟧ = 1) ((complete_graph (fin (M + N))).neighbor_finset 0)).card) (fin (M + N)) := ⟨λ x, ↑(ftrans ⟨x, finset.mem_univ x⟩), ftransembinj⟩,
-unfold Ramsey_prop at RamseySub,
-cases RamseySub.right (λ e, f ⟦(ftrans ⟨e.out.1, _⟩, ftrans ⟨e.out.2, _⟩)⟧) with clique clique; continue { clear RamseySub, simp },
-
-rcases clique with ⟨S, Sclique⟩,
-left,
-use (S.map ftransemb),
-constructor,
-simp [simple_graph.is_clique_iff, set.pairwise, graph_at_color],
-intros _ ainS b binS ftransneq,
-have ftransaprop := (ftrans ⟨a, finset.mem_univ a⟩).prop,
-simp at ftransaprop,
-simp [ftransneq],
-simp [simple_graph.is_clique_iff, set.pairwise, graph_at_color] at Sclique,
-cases (fin.decidable_eq _ a b) with aneqb aeqb,
-have abedge := Sclique.clique ainS binS aneqb,
-simp at abedge,
-cases' quotient.mk_out (a, b),
-rw ← cases_eq at abedge,
-simp at abedge,
-exact abedge.right,
-rw ← cases_eq at abedge,
-simp at abedge,
-rw [sym2.eq_swap],
-exact abedge.right,
-rw ← @subtype.mk_eq_mk (fin (finset.filter (λ (y : fin (M + N)), f ⟦(0, y)⟧ = 1) ((complete_graph (fin (M + N))).neighbor_finset 0)).card) (λ x, x ∈ finset.univ) a (finset.mem_univ a) b (finset.mem_univ b) at aeqb,
-have ftranseq := congr_arg ftrans aeqb,
-rw subtype.ext_iff at ftranseq,
-cases ftransneq ftranseq,
-simp [Sclique.card_eq],
-
-rcases clique with ⟨T, Tclique⟩,
-right,
-use (insert 0 (T.map ftransemb)),
-constructor,
-simp [simple_graph.is_clique_iff, set.pairwise, graph_at_color],
-split,
-intros _ ainT ftransa,
-have ftransaprop := (ftrans ⟨a, finset.mem_univ a⟩).prop,
-simp at ftransaprop,
-exact ftransaprop,
-intros _ ainT,
-have ftransaprop := (ftrans ⟨a, finset.mem_univ a⟩).prop,
-simp at ftransaprop,
-split,
-rw [sym2.eq_swap],
-intros ftransa,
-simp [ftransa, ftransaprop.right],
-intros b binT ftransneq,
-simp [ftransneq],
-simp [simple_graph.is_clique_iff, set.pairwise, graph_at_color] at Tclique,
-cases (fin.decidable_eq _ a b) with aneqb aeqb,
-have abedge := Tclique.clique ainT binT aneqb,
-simp at abedge,
-cases' quotient.mk_out (a, b),
-rw ← cases_eq at abedge,
-simp at abedge,
-exact abedge.right,
-rw ← cases_eq at abedge,
-simp at abedge,
-rw [sym2.eq_swap],
-exact abedge.right,
-rw ← @subtype.mk_eq_mk (fin (finset.filter (λ (y : fin (M + N)), f ⟦(0, y)⟧ = 1) ((complete_graph (fin (M + N))).neighbor_finset 0)).card) (λ x, x ∈ finset.univ) a (finset.mem_univ a) b (finset.mem_univ b) at aeqb,
-have ftranseq := congr_arg ftrans aeqb,
-rw subtype.ext_iff at ftranseq,
-cases ftransneq ftranseq,
-have znotinTmap : finNMzero.zero ∉ (T.map ftransemb),
-simp [ftransemb],
-intros a aprop ftransa,
-have ftransat := (ftrans ⟨a, finset.mem_univ a⟩).prop,
-simp [ftransa] at ftransat,
-exact ftransat,
-rw finset.card_insert_of_not_mem znotinTmap,
-simp [Tclique.card_eq],
+sorry
 
 end
 
-theorem Ramsey_finite : ∀ s t : ℕ, { N : ℕ | Ramsey_prop N s.succ t.succ }.nonempty :=
+theorem Ramsey₂_finite : ∀ s t : ℕ, { N : ℕ | Ramsey₂_prop N s.succ t.succ }.nonempty :=
 begin
-suffices Ramsey_finite_additive : ∀ m : ℕ, ∀ s t, m = s + t → { N : ℕ | Ramsey_prop N s.succ t.succ }.nonempty,
+suffices Ramsey₂_finite_additive : ∀ m : ℕ, ∀ s t, m = s + t → { N : ℕ | Ramsey₂_prop N s.succ t.succ }.nonempty,
 intros,
-apply (Ramsey_finite_additive (s + t) s t),
+apply (Ramsey₂_finite_additive (s + t) s t),
 simp,
 intro,
 induction m with st ih,
@@ -820,21 +614,20 @@ cases h' with s0 t0,
 simp [s0, t0],
 use 1,
 simp,
-unfold Ramsey_prop,
-simp,
+simp [Ramsey₂_prop, Ramsey_prop],
 intro,
-use {0},
-constructor; simp [simple_graph.is_clique_iff, set.pairwise],
+use [{0}, 0],
+constructor; simp [simple_graph.is_clique_iff, set.pairwise, vector.head],
 intros _ _ h,
 cases s; cases t,
 use 1,
 use 1,
 simp,
-apply Ramsey1_prop,
+apply Ramsey₂1_prop,
 use 1,
 simp,
-rw Ramsey_prop_symm,
-apply Ramsey1_prop,
+rw Ramsey₂_prop_symm,
+apply Ramsey₂1_prop,
 have s1t : st = s + t.succ,
 have stsuccpred := congr_arg nat.pred h,
 simp at stsuccpred,
@@ -852,61 +645,61 @@ cases RamseyT with T Tprop,
 simp at Sprop Tprop,
 use (S + T),
 simp,
-apply Ramsey_prop_ineq; assumption,
+apply Ramsey₂_prop_ineq; assumption,
 end
 
-theorem Ramsey_ineq : ∀ s t : ℕ, Ramsey s.succ.succ t.succ.succ ≤ Ramsey s.succ t.succ.succ + Ramsey s.succ.succ t.succ :=
+theorem Ramsey₂_ineq : ∀ s t : ℕ, Ramsey₂ s.succ.succ t.succ.succ ≤ Ramsey₂ s.succ t.succ.succ + Ramsey₂ s.succ.succ t.succ :=
 begin
 intros,
-have RamseyM := nat.Inf_mem (Ramsey_finite s t.succ),
-have RamseyN := nat.Inf_mem (Ramsey_finite s.succ t),
+have RamseyM := nat.Inf_mem (Ramsey₂_finite s t.succ),
+have RamseyN := nat.Inf_mem (Ramsey₂_finite s.succ t),
 simp at RamseyM RamseyN,
 apply nat.Inf_le,
 simp,
-apply Ramsey_prop_ineq; assumption
+apply Ramsey₂_prop_ineq; assumption
 end
 
-theorem Ramsey_symm : ∀  s t: ℕ, Ramsey s.succ t.succ = Ramsey t.succ s.succ :=
+theorem Ramsey₂_symm : ∀  s t: ℕ, Ramsey₂ s.succ t.succ = Ramsey₂ t.succ s.succ :=
 begin
 intros,
 apply nat.le_antisymm,
-have RamseyM := nat.Inf_mem (Ramsey_finite t s),
+have RamseyM := nat.Inf_mem (Ramsey₂_finite t s),
 apply nat.Inf_le,
-simp [Ramsey] at RamseyM ⊢,
-rw Ramsey_prop_symm at RamseyM,
+simp [Ramsey₂] at RamseyM ⊢,
+rw Ramsey₂_prop_symm at RamseyM,
 assumption,
-have RamseyN := nat.Inf_mem (Ramsey_finite s t),
+have RamseyN := nat.Inf_mem (Ramsey₂_finite s t),
 apply nat.Inf_le,
-simp [Ramsey] at RamseyN ⊢,
-rw Ramsey_prop_symm at RamseyN,
+simp [Ramsey₂] at RamseyN ⊢,
+rw Ramsey₂_prop_symm at RamseyN,
 assumption
 end
 
-theorem friendship_upper_bound_alt : Ramsey 3 3 ≤ 6 :=
+theorem friendship_upper_bound_alt : Ramsey₂ 3 3 ≤ 6 :=
 begin
-have R33 := Ramsey_ineq 1 1,
-rw [Ramsey_symm 2 1, Ramsey2] at R33,
+have R33 := Ramsey₂_ineq 1 1,
+rw [Ramsey₂_symm 2 1, Ramsey₂2] at R33,
 exact R33
 end
 
-theorem friendship : Ramsey 3 3 = 6 := sorry
+theorem friendship : Ramsey₂ 3 3 = 6 := sorry
 
-theorem Ramsey_binomial_coefficient_ineq : ∀ s t : ℕ, Ramsey s.succ t.succ 
+theorem Ramsey₂_binomial_coefficient_ineq : ∀ s t : ℕ, Ramsey₂ s.succ t.succ 
 ≤ nat.choose (s.succ + t.succ - 2) (s.succ - 1) :=
 begin
 intros,
 
 induction s with s' ihp₁ generalizing t,
 simp,
-rw Ramsey1 t,
+rw Ramsey₂1 t,
 
 induction t with t' ihp₂,
-rw Ramsey_symm,
-simp [Ramsey1 s'.succ],
-transitivity Ramsey s'.succ t'.succ.succ + Ramsey s'.succ.succ t'.succ,
-apply Ramsey_ineq s' t', 
+rw Ramsey₂_symm,
+simp [Ramsey₂1 s'.succ],
+transitivity Ramsey₂ s'.succ t'.succ.succ + Ramsey₂ s'.succ.succ t'.succ,
+apply Ramsey₂_ineq s' t', 
 
-have temp₁: Ramsey s'.succ t'.succ.succ + Ramsey s'.succ.succ t'.succ
+have temp₁: Ramsey₂ s'.succ t'.succ.succ + Ramsey₂ s'.succ.succ t'.succ
 ≤ (s'.succ + t'.succ.succ - 2).choose s' + (s'.succ.succ + t'.succ - 2).choose s'.succ,
 apply add_le_add,
 exact ihp₁ t'.succ,
