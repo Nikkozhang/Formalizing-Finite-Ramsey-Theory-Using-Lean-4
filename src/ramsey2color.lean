@@ -53,7 +53,7 @@ intros _ ainS b binS aneqb,
 have ScliqueMap := Sclique ainS binS aneqb,
 simp [f'] at ScliqueMap,
 exact ScliqueMap,
-simp [Scard]
+simp [Scard],
 end
 
 theorem Ramsey₂_prop_symm : ∀ N s t, Ramsey₂_prop N s t ↔ Ramsey₂_prop N t s :=
@@ -82,7 +82,25 @@ cases fxyneq0,
 simp [xneqy, ← fxy, this],
 assumption,
 use 0,
-sorry,
+simp [f', vector.nth] at Sclique Scard ⊢,
+constructor,
+simp [simple_graph.is_clique_iff, set.pairwise, graph_at_color] at Sclique ⊢,
+intros _ xinS _ yinS xneqy,
+have fxyeq0 := (Sclique xinS yinS xneqy).right,
+let fxy := f ⟦(x, y)⟧,
+fin_cases fxy,
+simp [fxy, ← this] at fxyeq0,
+simp [xneqy, ← fxy, this],
+have fxyneq0 : ¬f ⟦(x, y)⟧ = 0,
+simp [fxy] at this,
+simp [this],
+simp[fxyneq0] at fxyeq0,
+cases fxyeq0,
+assumption,
+
+intros,
+use ⟨helper N s t, helper N t s⟩,
+
 end
 
 lemma notc : ∀ {c x y : fin 2}, x ≠ c → y ≠ c → x = y :=
@@ -184,12 +202,10 @@ exact x.lt.z,
 rcases c0 with ⟨a, b, clique0ab⟩,
 fin_cases c,
 
-left,
-use {0, a, b},
+use [{0, a, b}, 0],
 assumption,
 
-right,
-use {0, a, b},
+use [{0, a, b}, 1],
 assumption,
 
 simp at h,
@@ -234,12 +250,10 @@ exact y.lt.z,
 let d := f ⟦(↑x, ↑y)⟧,
 fin_cases d using hd; simp [← d, hd] at d0,
 
-left,
-use {↑x,↑y,↑z},
+use [{↑x,↑y,↑z},0],
 assumption,
 
-right,
-use {↑x,↑y,↑z},
+use [{↑x,↑y,↑z},1],
 assumption,
 
 end
@@ -293,8 +307,37 @@ simp [sym2.eq_swap],
 split,
 exact h,
 exact eprop.right,
-simp [vector.nth],
-sorry
+simp [vector.nth,finset.card_eq_two],
+use [(quotient.out e).fst, (quotient.out e).snd],
+simp[eprop.left],
+
+unfold Ramsey₂_prop,
+unfold Ramsey_prop,
+simp,
+intro,
+let f : sym2 (fin k) → fin 2 := λ e, 1,
+use f,
+by_contra,
+simp at h,
+rcases h with ⟨ S, ⟨ i, S_prop ⟩ ⟩ ,
+fin_cases i,
+
+rw simple_graph.is_n_clique_iff at S_prop,
+rcases S_prop with ⟨SisClique,S_card⟩,
+unfold graph_at_color at SisClique,
+simp [simple_graph.is_clique_iff, set.pairwise, graph_at_color] at SisClique,
+simp [vector.nth,finset.card_eq_two] at S_card,
+rcases S_card with ⟨x,y,⟨xneqy,Sxy⟩ ⟩ ,
+have xins : x ∈ S := by rw Sxy; simp,
+have yins : y ∈ S := by rw Sxy; simp,
+exact SisClique xins yins xneqy,
+
+have kcard : fintype.card (fin k) < k.succ := by simp; apply nat.le_refl,
+have cliquefree : (graph_at_color (complete_graph (fin k)) f 1).clique_free k.succ :=
+by apply simple_graph.clique_free_of_card_lt kcard,
+unfold simple_graph.clique_free at cliquefree,
+have Scontra :=  cliquefree S,
+contradiction,
 end
 
 lemma missing_pigeonhole {α β : Type} [decidable_eq α] [linear_ordered_semiring β] : ∀ {s : finset α}, finset.nonempty s → ∀ {f g : α → β}, s.sum f ≤ s.sum g → ∃ a : α, a ∈ s ∧ f a ≤ g a :=
@@ -614,8 +657,10 @@ simp at ainset ⊢,
 let fa := f ⟦(0, a)⟧,
 fin_cases fa; simp [monochromatic_vicinity, ← fa, this, ainset],
 rw [seteq, simple_graph.neighbor_finset_eq_filter],
-simp [complete_graph, finset.filter_ne, rat.coe_nat_eq_mk N, rat.coe_nat_eq_mk M],
+simp [complete_graph, finset.filter_ne],
+simp [← rat.coe_nat_eq_mk (M + N - 1)],
 admit,
+
 have mp := missing_pigeonhole (exists.intro (0 : fin 2) (finset.mem_univ (0 : fin 2))) (le_of_eq hgsum),
 rcases mp with ⟨a, ainuniv, gha⟩,
 fin_cases a; simp [g, h] at gha,
@@ -638,6 +683,9 @@ use [S, 1],
 have ieq1 := notc Sclique.left (fin.succ_ne_zero 0),
 simp [ieq1] at Sclique,
 exact Sclique,
+
+have MleqNeighbor0 := floormagic M (monochromatic_vicinity (complete_graph (fin (M + N))) 0 f 1).card (rat.mk_nat 1 2) halflt1 gha,
+cases cliquecases with T Tclique,
 
 sorry
 
