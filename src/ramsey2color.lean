@@ -8,7 +8,7 @@ import tactic.fin_cases
 import tactic.induction
 
 import .pick_tactic
-
+import tactic.noncomm_ring
 def graph_at_color {N k : ℕ} (G : simple_graph (fin N)) (ϕ : sym2 (fin N) → fin k)
  (i : fin k): simple_graph (fin N) := {
   adj := λ u v, (G.adj u v) ∧ (ϕ ⟦(u, v)⟧ = i),
@@ -604,6 +604,13 @@ rw finset.card_insert_of_not_mem vnotinSmap,
 simp [Sclique.card_eq, h]
 end
 
+lemma halflt1 : rat.mk_pnat 1 2 < 1 :=
+begin
+simp [rat.lt_one_iff_num_lt_denom, rat.mk_pnat_num,
+rat.mk_pnat_denom];
+linarith,
+end
+
 theorem Ramsey₂_prop_ineq : ∀ M N s t : ℕ, Ramsey₂_prop M s.succ t.succ.succ → Ramsey₂_prop N s.succ.succ t.succ → Ramsey₂_prop (M + N) s.succ.succ t.succ.succ :=
 begin
 intros _ _ _ _ RamseyM RamseyN,
@@ -628,7 +635,7 @@ rw univexpand,
 simp [h, g],
 have lhs :  ↑M - rat.mk 1 2 + (↑N - rat.mk 1 2) =
 ↑M + ↑N - 1,
-abel,
+noncomm_ring,
 simp,
 rw [← rat.inv_def],
 apply rat.mul_inv_cancel,
@@ -654,13 +661,13 @@ simp [monochromatic_vicinity] at ainset ⊢,
 cases ainset with aprop aprop; exact aprop.left,
 intros _ ainset,
 simp at ainset ⊢,
+
 let fa := f ⟦(0, a)⟧,
 fin_cases fa; simp [monochromatic_vicinity, ← fa, this, ainset],
 rw [seteq, simple_graph.neighbor_finset_eq_filter],
-simp [complete_graph, finset.filter_ne],
-simp [← rat.coe_nat_eq_mk (M + N - 1)],
-admit,
-
+simp [complete_graph, finset.filter_ne,rat.coe_nat_eq_mk N, rat.coe_nat_eq_mk M],
+rw [← int.coe_nat_add M N, ← rat.mk_one_one, rat.sub_def (ne_of_gt int.zero_lt_one) (ne_of_gt int.zero_lt_one)],
+simp[Oprop],
 have mp := missing_pigeonhole (exists.intro (0 : fin 2) (finset.mem_univ (0 : fin 2))) (le_of_eq hgsum),
 rcases mp with ⟨a, ainuniv, gha⟩,
 fin_cases a; simp [g, h] at gha,
@@ -668,10 +675,7 @@ fin_cases a; simp [g, h] at gha,
 have MtoZ : (↑M:ℚ) = (↑M:ℤ) := by simp,
 rw MtoZ at gha,
 rw ← rat.le_floor at gha,
-have halflt1 : rat.mk_pnat 1 2 < 1 :=
-by simp [rat.lt_one_iff_num_lt_denom, rat.mk_pnat_num,
-rat.mk_pnat_denom];
-linarith,
+
 have MleqNeighbor0 := floormagic M (monochromatic_vicinity (complete_graph (fin (M + N))) 0 f 0).card (rat.mk_nat 1 2) halflt1 gha,
 have cliquecases := monochromatic_vicinity_Ramsey 0 f 0 ⟨[s.succ, t.succ.succ], by simp⟩ (Ramsey_monotone RamseyM MleqNeighbor0),
 cases cliquecases,
@@ -684,10 +688,20 @@ have ieq1 := notc Sclique.left (fin.succ_ne_zero 0),
 simp [ieq1] at Sclique,
 exact Sclique,
 
-have MleqNeighbor0 := floormagic M (monochromatic_vicinity (complete_graph (fin (M + N))) 0 f 1).card (rat.mk_nat 1 2) halflt1 gha,
+have NtoZ : (↑N:ℚ) = (↑N:ℤ) := by simp,
+rw NtoZ at gha,
+rw ← rat.le_floor at gha,
+have NleqNeighbor1 := floormagic N (monochromatic_vicinity (complete_graph (fin (M + N))) 0 f 1).card (rat.mk_nat 1 2) halflt1 gha,
+have cliquecases := monochromatic_vicinity_Ramsey 0 f 1 ⟨[s.succ.succ, t.succ], by simp⟩ (Ramsey_monotone RamseyN NleqNeighbor1),
+cases cliquecases,
 cases cliquecases with T Tclique,
-
-sorry
+use [T, 1],
+exact Tclique,
+rcases cliquecases with ⟨i, ⟨T, Tclique⟩⟩,
+use [T, 0],
+have ineq1 := notc Tclique.left fin.zero_ne_one,
+simp [ineq1] at Tclique,
+exact Tclique,
 
 end
 
