@@ -9,7 +9,6 @@ import tactic.induction
 
 import .pick_tactic
 import tactic.noncomm_ring
---import tactic.cancel_denoms
 
 def graph_at_color {N k : ℕ} (G : simple_graph (fin N)) (ϕ : sym2 (fin N) → fin k)
  (i : fin k): simple_graph (fin N) := {
@@ -608,7 +607,6 @@ end
 
 lemma halflt1 : rat.mk_pnat 1 2 < 1 :=
 begin
---cancel_denoms,
 simp [rat.lt_one_iff_num_lt_denom, rat.mk_pnat_num,
 rat.mk_pnat_denom];
 linarith,
@@ -737,9 +735,13 @@ simp [h,fb1] at fa0,
 exact fa0,
 rw ← finset.card_union_eq filterdisj,
 have seteq : (finset.filter (λ (e : sym2 (fin (M' + N').succ)), f e = 0) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset ∪ finset.filter (λ (e : sym2 (fin (M' + N').succ)), f e = 1) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset) = (⊤ : simple_graph (fin (M' + N').succ)).edge_finset,
---simp [← finset.val_inj, finset.filter, multiset.filter],
---by_contra,
-admit,
+simp[finset.subset.antisymm_iff,finset.subset_iff],
+split, 
+intros _ xprop; cases xprop; exact xprop.left,
+intros _ xprop,  
+let fx := f x,
+fin_cases fx; simp[← fx, this];exact xprop,
+
 rw [seteq, ← simple_graph.sum_degrees_eq_twice_card_edges],
 simp,
 have mp := missing_pigeonhole (exists.intro (0 : fin 2) (finset.mem_univ (0 : fin 2))) (nat.le_of_eq hgsum),
