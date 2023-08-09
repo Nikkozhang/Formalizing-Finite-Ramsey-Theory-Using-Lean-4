@@ -1,14 +1,16 @@
 import combinatorics.pigeonhole
 import combinatorics.simple_graph.clique
+import combinatorics.simple_graph.degree_sum
 import data.fin.vec_notation
 import data.rat.floor
 import algebra.order.floor
-
 import tactic.fin_cases
 import tactic.induction
 
 import .pick_tactic
 import tactic.noncomm_ring
+--import tactic.cancel_denoms
+
 def graph_at_color {N k : ℕ} (G : simple_graph (fin N)) (ϕ : sym2 (fin N) → fin k)
  (i : fin k): simple_graph (fin N) := {
   adj := λ u v, (G.adj u v) ∧ (ϕ ⟦(u, v)⟧ = i),
@@ -606,6 +608,7 @@ end
 
 lemma halflt1 : rat.mk_pnat 1 2 < 1 :=
 begin
+--cancel_denoms,
 simp [rat.lt_one_iff_num_lt_denom, rat.mk_pnat_num,
 rat.mk_pnat_denom];
 linarith,
@@ -726,14 +729,27 @@ fin_cases x; simp,
 rw univexpand,
 simp [h, g],
 rw [← nat.left_distrib, ← nat.left_distrib],
-have filterdisj : disjoint (finset.filter (λ e, f e = 0) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset) (finset.filter (λ e, f e = 1) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset) := sorry,
+have filterdisj : disjoint (finset.filter (λ e, f e = 0) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset) (finset.filter (λ e, f e = 1) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset),
+simp[finset.disjoint_iff_ne],
+intros a _ fa0 b _ fb1,
+by_contra,
+simp [h,fb1] at fa0,
+exact fa0,
 rw ← finset.card_union_eq filterdisj,
-have seteq : (finset.filter (λ (e : sym2 (fin (M' + N').succ)), f e = 0) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset ∪ finset.filter (λ (e : sym2 (fin (M' + N').succ)), f e = 1) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset) = (⊤ : simple_graph (fin (M' + N').succ)).edge_finset := sorry,
+have seteq : (finset.filter (λ (e : sym2 (fin (M' + N').succ)), f e = 0) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset ∪ finset.filter (λ (e : sym2 (fin (M' + N').succ)), f e = 1) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset) = (⊤ : simple_graph (fin (M' + N').succ)).edge_finset,
+--simp [← finset.val_inj, finset.filter, multiset.filter],
+--by_contra,
+admit,
 rw [seteq, ← simple_graph.sum_degrees_eq_twice_card_edges],
 simp,
 have mp := missing_pigeonhole (exists.intro (0 : fin 2) (finset.mem_univ (0 : fin 2))) (nat.le_of_eq hgsum),
 rcases mp with ⟨a, ainuniv, gha⟩,
-have cardodd : odd (M' + N').succ := sorry,
+
+have cardodd : odd (M' + N').succ,
+simp[← nat.even_add_one],
+rw[← nat.succ_add, nat.add_assoc, nat.add_one],
+simp[nat.even_add, evenM, evenN],
+
 fin_cases a; simp [g, h] at gha,
 
 have evenrhs : even (2 * (finset.filter (λ (e : sym2 (fin (M' + N').succ)), f e = 0) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset).card) := by simp,
@@ -745,7 +761,12 @@ have oddlhs := nat.odd_mul.mpr ⟨cardodd, evenM⟩,
 simp at oddlhs,
 exact oddlhs,
 have ghalt := xor_even_le_implies_lt xoreven gha,
-have dblcnt : 2 * (finset.filter (λ (e : sym2 (fin (M' + N').succ)), f e = 0) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset).card = (finset.filter (λ (x : (⊤ : simple_graph (fin (M' + N').succ)).dart), f ⟦x.to_prod⟧ = 0) finset.univ).card := sorry,
+have dblcnt : 2 * (finset.filter (λ (e : sym2 (fin (M' + N').succ)), f e = 0) 
+(⊤ : simple_graph (fin (M' + N').succ)).edge_finset).card = 
+(finset.filter (λ (x : (⊤ : simple_graph (fin (M' + N').succ)).dart), 
+f ⟦x.to_prod⟧ = 0) finset.univ).card,
+admit,
+
 rw dblcnt at ghalt,
 have pghineq : (@finset.univ (fin (M' + N').succ) _).card • M' < ↑((finset.filter (λ (x : (⊤ : simple_graph (fin (M' + N').succ)).dart), f ⟦x.to_prod⟧ = 0) finset.univ).card) := by simp [ghalt],
 have pgh := finset.exists_lt_card_fiber_of_mul_lt_card_of_maps_to (λ (e : (⊤ : simple_graph (fin (M' + N').succ)).dart) _, finset.mem_univ e.snd) pghineq,
@@ -788,7 +809,59 @@ have ieq1 := notc Sclique.left (fin.succ_ne_zero 0),
 simp [ieq1] at Sclique,
 exact Sclique,
 
-sorry
+have evenrhs : even (2 * (finset.filter (λ (e : sym2 (fin (M' + N').succ)), f e = 1) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset).card) := by simp,
+have xoreven : xor (even ((M' + N').succ * N')) (even (2 * (finset.filter (λ (e : sym2 (fin (M' + N').succ)), f e = 1) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset).card)),
+right,
+simp,
+rw [← nat.add_one, nat.even_add_one, ← nat.odd_iff_not_even] at evenN,
+have oddlhs := nat.odd_mul.mpr ⟨cardodd, evenN⟩,
+simp at oddlhs,
+exact oddlhs,
+have ghalt := xor_even_le_implies_lt xoreven gha,
+have dblcnt : 2 * (finset.filter (λ (e : sym2 (fin (M' + N').succ)), f e = 1) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset).card = (finset.filter (λ (x : (⊤ : simple_graph (fin (M' + N').succ)).dart), f ⟦x.to_prod⟧ = 1) finset.univ).card,
+admit,
+
+rw dblcnt at ghalt,
+have pghineq : (@finset.univ (fin (M' + N').succ) _).card • N' < ↑((finset.filter (λ (x : (⊤ : simple_graph (fin (M' + N').succ)).dart), f ⟦x.to_prod⟧ = 1) finset.univ).card) := by simp [ghalt],
+have pgh := finset.exists_lt_card_fiber_of_mul_lt_card_of_maps_to (λ (e : (⊤ : simple_graph (fin (M' + N').succ)).dart) _, finset.mem_univ e.snd) pghineq,
+rcases pgh with ⟨v, vmem, vprop⟩,
+simp at vprop,
+have cardeq : (finset.filter (λ (x : (⊤ : simple_graph (fin (M' + N').succ)).dart), x.to_prod.snd = v)
+       (finset.filter (λ (x : (⊤ : simple_graph (fin (M' + N').succ)).dart), f ⟦x.to_prod⟧ = 1) finset.univ)).card = (monochromatic_vicinity (⊤ : simple_graph (fin (M' + N').succ)) v f 1).card,
+apply finset.card_congr (λ (a : (⊤ : simple_graph (fin (M' + N').succ)).dart) ainS, a.fst),
+intro,
+simp [monochromatic_vicinity],
+intros f1 asndv,
+split,
+intro afstv,
+have aprop := a.is_adj,
+simp [asndv, ← afstv] at aprop,
+exact aprop,
+simp [sym2.eq_swap, ← asndv],
+exact f1,
+intros _ _,
+simp,
+intros fa asndv fb bsndv abfst,
+rw simple_graph.dart.ext_iff,
+rw prod.ext_iff,
+simp [abfst, asndv, bsndv],
+intro,
+simp [monochromatic_vicinity],
+intros bnotv fvb1,
+use (b, v); simp,
+tauto,
+simp [sym2.eq_swap, fvb1],
+rw cardeq at vprop,
+have cliquecases := monochromatic_vicinity_Ramsey v f 1 ⟨[s.succ.succ, t.succ], by simp⟩ (Ramsey_monotone RamseyN vprop),
+cases cliquecases,
+cases cliquecases with T Tclique,
+use [T, 1],
+exact Tclique,
+rcases cliquecases with ⟨i, ⟨T, Tclique⟩⟩,
+use [T, 0],
+have ineq1 := notc Tclique.left fin.zero_ne_one,
+simp [ineq1] at Tclique,
+exact Tclique,
 
 end
 
