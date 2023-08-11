@@ -1,6 +1,7 @@
 import combinatorics.pigeonhole
 import combinatorics.simple_graph.clique
 import combinatorics.simple_graph.degree_sum
+import combinatorics.double_counting
 import data.fin.vec_notation
 import data.rat.floor
 import algebra.order.floor
@@ -751,6 +752,85 @@ have cardodd : odd (M' + N').succ,
 simp[← nat.even_add_one],
 rw[← nat.succ_add, nat.add_assoc, nat.add_one],
 simp[nat.even_add, evenM, evenN],
+---
+have dblcnt : ∀ c : fin 2, 2 * (finset.filter (λ (e : sym2 (fin (M' + N').succ)), f e = c) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset).card = (finset.filter (λ (x : (⊤ : simple_graph (fin (M' + N').succ)).dart), f ⟦x.to_prod⟧ = c) finset.univ).card,
+let r: sym2 (fin (M' + N').succ) → (⊤ : simple_graph (fin (M' + N').succ)).dart → Prop 
+:= λ x y, x = ⟦y.to_prod⟧ ∨ x = ⟦y.to_prod.swap⟧,
+intro c,
+let s := finset.filter (λ (e : sym2 (fin (M' + N').succ)), f e = c) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset,
+let t := finset.filter (λ (x : (⊤ : simple_graph (fin (M' + N').succ)).dart), f ⟦x.to_prod⟧ = c) finset.univ, 
+have hm : ∀ (a : sym2 (fin (M' + N').succ)), a ∈ s
+→ (finset.bipartite_above r t a).card = 2,
+intros a ains,
+simp [finset.bipartite_above,r, finset.card_eq_two ],
+simp[simple_graph.mem_edge_set, ←  simple_graph.complete_graph_eq_top,complete_graph] at ains,
+cases ains,
+
+use a.out,
+have temp : a = ⟦(a.out.1, a.out.2)⟧ := by simp,
+rw [temp] at ains_left,
+exact ains_left,
+
+use a.out.swap,
+have temp : a = ⟦(a.out.2, a.out.1)⟧,
+rw[ sym2.eq_swap], simp,
+rw [temp] at ains_left,
+exact ains_left,
+
+simp,
+
+split,
+by_contra,
+simp[prod.ext_iff] at h,
+cases h,
+have temp : a = ⟦(a.out.1, a.out.2)⟧ := by simp,
+rw [temp] at ains_left,
+simp[h_left] at ains_left,
+exact ains_left,
+
+simp[finset.subset.antisymm_iff,finset.subset_iff],
+split, 
+intros _ _ aeqx, 
+cases' quotient.mk_out (x.to_prod.1, x.to_prod.2),
+left,
+apply simple_graph.dart.ext,
+simp[aeqx],
+have temp: x.to_prod = (x.to_prod.1, x.to_prod.2) := by simp,
+rw[temp],
+exact cases_eq,
+right,
+apply simple_graph.dart.ext,
+simp[aeqx],
+have temp: x.to_prod = (x.to_prod.2, x.to_prod.1).swap := by simp[prod.swap_prod_mk],
+rw[temp,prod.swap_inj],
+rw[← temp],
+simp[cases_eq],
+
+exact ains_right,
+
+have hn : ∀ (b : (⊤ : simple_graph (fin (M' + N').succ)).dart), b ∈ t
+→ (finset.bipartite_below r s b).card = 1,
+intros _ bint,
+simp [finset.bipartite_below, r, finset.card_eq_one],
+simp[←  simple_graph.complete_graph_eq_top,complete_graph] at bint,
+use b.edge,
+simp[finset.subset.antisymm_iff,finset.subset_iff,simple_graph.mem_edge_set,←  simple_graph.complete_graph_eq_top,complete_graph],
+have to_edge : b.edge = ⟦b.to_prod⟧ := by simp[simple_graph.dart_edge_eq_mk_iff],
+split,
+intros x _ _ xeqb,
+rw[xeqb],
+simp[to_edge],
+split,
+split,
+have temp:= simple_graph.dart.edge_mem b,
+simp[←  simple_graph.complete_graph_eq_top,complete_graph] at temp,
+exact temp,
+simp[to_edge,bint],
+exact to_edge,
+have temp := finset.card_mul_eq_card_mul r hm hn,
+simp[mul_one (t.card)] at temp,
+simp[← s,← t, ← temp,mul_comm],
+---
 
 fin_cases a; simp [g, h] at gha,
 
@@ -763,13 +843,8 @@ have oddlhs := nat.odd_mul.mpr ⟨cardodd, evenM⟩,
 simp at oddlhs,
 exact oddlhs,
 have ghalt := xor_even_le_implies_lt xoreven gha,
-have dblcnt : 2 * (finset.filter (λ (e : sym2 (fin (M' + N').succ)), f e = 0) 
-(⊤ : simple_graph (fin (M' + N').succ)).edge_finset).card = 
-(finset.filter (λ (x : (⊤ : simple_graph (fin (M' + N').succ)).dart), 
-f ⟦x.to_prod⟧ = 0) finset.univ).card,
-admit,
 
-rw dblcnt at ghalt,
+rw [dblcnt 0] at ghalt,
 have pghineq : (@finset.univ (fin (M' + N').succ) _).card • M' < ↑((finset.filter (λ (x : (⊤ : simple_graph (fin (M' + N').succ)).dart), f ⟦x.to_prod⟧ = 0) finset.univ).card) := by simp [ghalt],
 have pgh := finset.exists_lt_card_fiber_of_mul_lt_card_of_maps_to (λ (e : (⊤ : simple_graph (fin (M' + N').succ)).dart) _, finset.mem_univ e.snd) pghineq,
 rcases pgh with ⟨v, vmem, vprop⟩,
@@ -820,10 +895,7 @@ have oddlhs := nat.odd_mul.mpr ⟨cardodd, evenN⟩,
 simp at oddlhs,
 exact oddlhs,
 have ghalt := xor_even_le_implies_lt xoreven gha,
-have dblcnt : 2 * (finset.filter (λ (e : sym2 (fin (M' + N').succ)), f e = 1) (⊤ : simple_graph (fin (M' + N').succ)).edge_finset).card = (finset.filter (λ (x : (⊤ : simple_graph (fin (M' + N').succ)).dart), f ⟦x.to_prod⟧ = 1) finset.univ).card,
-admit,
-
-rw dblcnt at ghalt,
+rw [dblcnt 1] at ghalt,
 have pghineq : (@finset.univ (fin (M' + N').succ) _).card • N' < ↑((finset.filter (λ (x : (⊤ : simple_graph (fin (M' + N').succ)).dart), f ⟦x.to_prod⟧ = 1) finset.univ).card) := by simp [ghalt],
 have pgh := finset.exists_lt_card_fiber_of_mul_lt_card_of_maps_to (λ (e : (⊤ : simple_graph (fin (M' + N').succ)).dart) _, finset.mem_univ e.snd) pghineq,
 rcases pgh with ⟨v, vmem, vprop⟩,
