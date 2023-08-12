@@ -936,7 +936,6 @@ use [T, 0],
 have ineq1 := notc Tclique.left fin.zero_ne_one,
 simp [ineq1] at Tclique,
 exact Tclique,
-
 end
 
 theorem Ramsey₂_finite : ∀ s t : ℕ, { N : ℕ | Ramsey₂_prop N s.succ t.succ }.nonempty :=
@@ -998,6 +997,48 @@ apply nat.Inf_le,
 simp,
 apply Ramsey₂_prop_ineq; assumption
 end
+
+theorem Ramsey₂_strict_ineq : ∀ s t : ℕ, even (Ramsey₂ s.succ t.succ.succ) → even (Ramsey₂ s.succ.succ t.succ) → Ramsey₂ s.succ.succ t.succ.succ < Ramsey₂ s.succ t.succ.succ + Ramsey₂ s.succ.succ t.succ :=
+begin 
+intros _ _ evenM evenN,
+have lt_or_eq := decidable.lt_or_eq_of_le (Ramsey₂_ineq s t),
+cases lt_or_eq,
+exact lt_or_eq,
+
+have temp := Ramsey₂_prop_strict_ineq (Ramsey₂ s.succ t.succ.succ)(Ramsey₂ s.succ.succ t.succ) (s) (t) evenM evenN,
+unfold Ramsey₂ at temp,
+have RamseyM := nat.Inf_mem (Ramsey₂_finite s t.succ),
+have RamseyN := nat.Inf_mem (Ramsey₂_finite s.succ t),
+simp at RamseyM RamseyN,
+unfold Ramsey₂ at lt_or_eq,
+
+have pos : (Inf {N : ℕ | Ramsey₂_prop N s.succ t.succ.succ} + Inf {N : ℕ | Ramsey₂_prop N s.succ.succ t.succ}) ≠ 0,
+simp[← lt_or_eq],
+by_contra,
+cases h,
+unfold Ramsey₂_prop at h,
+unfold Ramsey_prop at h,
+simp at h,
+exact h,
+have contra := Ramsey₂_finite s.succ t.succ,
+simp [h] at contra,
+exact contra,
+
+have pred_lt : (Inf {N : ℕ | Ramsey₂_prop N s.succ t.succ.succ} + Inf {N : ℕ | Ramsey₂_prop N s.succ.succ t.succ}).pred < 
+(Inf {N : ℕ | Ramsey₂_prop N s.succ t.succ.succ} + Inf {N : ℕ | Ramsey₂_prop N s.succ.succ t.succ}) := by simp[ nat.pred_lt pos],
+
+have pred_in_set : (Inf {N : ℕ | Ramsey₂_prop N s.succ t.succ.succ} + 
+Inf {N : ℕ | Ramsey₂_prop N s.succ.succ t.succ}).pred ∈ 
+{N : ℕ | Ramsey₂_prop N s.succ.succ t.succ.succ} := by simp[temp RamseyM RamseyN],
+
+have le_pred :=  nat.Inf_le pred_in_set,
+simp[lt_or_eq] at le_pred,
+have absurd := lt_of_le_of_lt le_pred pred_lt,
+simp at absurd,
+contradiction,
+
+end
+
 
 theorem Ramsey₂_symm : ∀  s t: ℕ, Ramsey₂ s.succ t.succ = Ramsey₂ t.succ s.succ :=
 begin
