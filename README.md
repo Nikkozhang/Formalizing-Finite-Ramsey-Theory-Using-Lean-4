@@ -1,5 +1,5 @@
-# Formalizing Small Ramsey Numbers Using Lean 4 
-This ongoing project is a joint work by **David Narvez, Congyan (Cruise) Song, and Ningxin Zhang**. We use **interatvie theorm proving (in Lean 4)** combined with **automatic theorem proving** to formalize theories regrading small Ramsey numbers. We prove exact values for several small Ramsey numbers and related van der Waerden numbers. 
+# Formalizing Finite Ramsey Theory Using Lean 4 
+This ongoing project is a joint work by **David Narvez, Congyan (Cruise) Song, and Ningxin Zhang**. We use **interatvie theorm proving (in Lean 4)** combined with **automatic theorem proving** to formalize finite Ramsey theorey. We prove exact values for several small Ramsey numbers and related van der Waerden numbers. 
 
 ## Van der Waerden's theorem
 The statement of the theorem is at [here](https://en.wikipedia.org/wiki/Van_der_Waerden%27s_theorem). 
@@ -11,7 +11,7 @@ The second major contribution so far was formalizing $W(2,3) = 9$, in which we p
 ## Ramsey Theory 
 The statement of the theorem is at [here](https://en.wikipedia.org/wiki/Ramsey%27s_theorem). 
 
-In ```Ramsey2Color.lean``` We proved a series of theorems regrading the finite Ramsey theorey. The major theorem we verified was $R(3,3) = 6$. This part is still under construction. 
+In ```Ramsey2Color.lean``` We proved a series of theorems with small Ramsey numbers. The major theorem we verified was $R(3,3) = 6$. This part is still under construction. 
 
 To fully understand the details of our proof, one might wish to see ``` Utils.lean```, in which we put some definitions and interesting lemmas. 
 
