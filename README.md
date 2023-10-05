@@ -1,12 +1,12 @@
 # Formalizing Finite Ramsey Theory Using Lean 4 
-This ongoing project is a joint work by **David Narvez, Congyan (Cruise) Song, and Ningxin Zhang**. We use **interatvie theorm proving (in Lean 4)** combined with **automatic theorem proving** to formalize finite Ramsey theorey. We prove exact values for several small Ramsey numbers and related van der Waerden numbers. 
+This ongoing project is a joint work by **David Narvez, Congyan (Cruise) Song, and Ningxin Zhang**. We use **interatvie theorm proving (in Lean 4)** combined with **automated theorem proving** to formalize finite Ramsey theorey. We prove exact values for several small Ramsey numbers and related van der Waerden numbers. 
 
 ## Van der Waerden's theorem
 The statement of the theorem is at [here](https://en.wikipedia.org/wiki/Van_der_Waerden%27s_theorem). 
 
 In ```VdW.lean```, the first major result was formalzing $W(2,3) <= 325$ by interactive theorem proving.
 
-The second major contribution so far was formalizing $W(2,3) = 9$, in which we proved the lowerbound by brutal force and the upperbound by automatic theorem proving by SAT solveres.
+The second major contribution so far was formalizing $W(2,3) = 9$, in which we proved the lowerbound by brutal force and the upperbound by automated theorem proving by SAT solveres.
 
 ## Ramsey Theory 
 The statement of the theorem is at [here](https://en.wikipedia.org/wiki/Ramsey%27s_theorem). 
