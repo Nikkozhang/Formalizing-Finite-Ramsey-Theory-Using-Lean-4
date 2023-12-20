@@ -471,20 +471,14 @@ theorem R333 : Ramsey (Vector.ofFn ![3, 3, 3]) = 17 := by
     use V, VProp
     apply And.intro
     · intro i
-      fin_cases i
-      · simp [Vector.ofFn, Vector.get, List.nthLe, SimpleGraph.CliqueFree]
-        intros S SNClique
-        rw [← SimpleGraph.mem_cliqueFinset_iff] at SNClique
+      fin_cases i <;> simp [Vector.ofFn, Vector.get, List.nthLe, SimpleGraph.CliqueFree] <;> intros S SNClique
+      · rw [← SimpleGraph.mem_cliqueFinset_iff] at SNClique
         have myReplace : (readG6 "O_k_ClSCDD`S[_`DkIa[_").cliqueFinset 3 = ∅ := by native_decide
         simp [myReplace] at SNClique
-      · simp [Vector.ofFn, Vector.get, List.nthLe, SimpleGraph.CliqueFree]
-        intros S SNClique
-        rw [← SimpleGraph.mem_cliqueFinset_iff] at SNClique
+      · rw [← SimpleGraph.mem_cliqueFinset_iff] at SNClique
         have myReplace : (readG6 "OWBYaAJIaOQJ@SMOOPX`S").cliqueFinset 3 = ∅ := by native_decide
         simp [myReplace] at SNClique
-      · simp [Vector.ofFn, Vector.get, List.nthLe, SimpleGraph.CliqueFree]
-        intros S SNClique
-        rw [← SimpleGraph.mem_cliqueFinset_iff] at SNClique
+      · rw [← SimpleGraph.mem_cliqueFinset_iff] at SNClique
         -- NOTE: The replacement here looks different because the simplifier can only count up to 2
         have myReplace : (readG6 (Matrix.vecHead (Matrix.vecTail !["OWBYaAJIaOQJ@SMOOPX`S", "OFODXO_pWiK_aJOiBcCAJ"]))).cliqueFinset 3 = ∅ := by native_decide
         simp [myReplace] at SNClique
@@ -497,9 +491,18 @@ theorem R333 : Ramsey (Vector.ofFn ![3, 3, 3]) = 17 := by
         simp [castGraph] at iProp
         use i
       · rw [SimpleGraph.ext_iff]
-        simp only [castGraph, readG6, completeGraph]
         ext x y
-        simp
+        simp only [completeGraph]
+        by_cases x = y
+        simp [h]
+        simp [castGraph, readG6]
         rw [Fin.ext_iff, Fin.exists_fin_succ, Fin.exists_fin_succ, Fin.exists_fin_succ]
-        simp
-        fin_cases x <;> fin_cases y <;> dsimp <;> norm_num <;> native_decide
+        rcases x with ⟨xVal,xProp⟩
+        rcases y with ⟨yVal,yProp⟩
+        wlog xlty : xVal < yVal
+        simp_all
+        have yltx : yVal < xVal := by simp [Ne.lt_of_le' h xlty]
+        have temp := this Rleq u v uneqv yVal yProp xVal xProp (Ne.symm h) yltx
+        rw [Sym2.eq_swap]
+        simp [temp]
+        interval_cases xVal <;> interval_cases yVal <;> dsimp <;> norm_num <;> native_decide
