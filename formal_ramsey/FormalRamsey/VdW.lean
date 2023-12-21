@@ -68,8 +68,7 @@ lemma vdW325 : vdWProp 325 3 1 := by
   unfold vdWProp
   intros f
   let g : Fin 33 → Bitvec 5 := λ k => Vector.ofFn (λ i=> f (5 * k + i) = 0)
-  have fin533 : Fintype.card (Bitvec 5) • 1 < Fintype.card (Fin 33)
-  simp
+  have fin533 : Fintype.card (Bitvec 5) • 1 < Fintype.card (Fin 33) := by simp
   have ghyp := Fintype.exists_lt_card_fiber_of_mul_lt_card g fin533
   rcases ghyp with ⟨y₅, y₅hyp⟩
   -- pick block₁ block₂ from (Finset.filter (λ (x : Fin 33) => g x = y₅) Finset.univ)
